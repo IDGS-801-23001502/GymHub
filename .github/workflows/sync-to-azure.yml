@@ -1,0 +1,31 @@
+name: Sync to Azure DevOps
+
+on:
+  push:
+    branches:
+      - main # O la rama principal que uses (ej. master)
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Clona todo el historial para asegurar una sincronización limpia
+
+      - name: Push to Azure DevOps
+        env:
+          AZURE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          # Configura la identidad del bot que hará el commit/push
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
+          # URL de tu repositorio de Azure DevOps con autenticación mediante PAT
+          AZURE_REPO_URL="https://azapp:${AZURE_PAT}@dev.azure.com/DevByteStudios/Gym-Hub/_git/Gym-Hub"
+
+          # Añade Azure DevOps como un remoto temporal
+          git remote add azure "$AZURE_REPO_URL"
+
+          # Empuja los cambios de forma forzada para mantener exactamente la misma estructura de carpetas
+          git push azure main --force

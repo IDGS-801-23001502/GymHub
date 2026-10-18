@@ -1,0 +1,70 @@
+# ==========================================
+# GymHub Backend - .gitignore
+# ==========================================
+
+# --- Compiled Output ---
+/dist
+/node_modules
+/build
+
+# --- TypeScript & Build Cache ---
+*.tsbuildinfo
+.temp
+.tmp
+
+# --- Environment Variables ---
+.env
+.env.*
+!.env.example
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# --- Logs ---
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# --- Tests & Coverage ---
+/coverage
+/.nyc_output
+
+# --- Operating System ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- IDEs & Editors ---
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# --- AI Agents & Tooling Cache ---
+.agents/
+.claude/
+.cursor/
+.devin/
+.prisma-composer/
+
+# --- Runtime Data ---
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# --- Diagnostic Reports ---
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

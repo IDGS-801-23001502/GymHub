@@ -1,0 +1,96 @@
+# ==========================================
+# GymHub - Root .gitignore
+# ==========================================
+
+# --- Node & Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- Build & Output Artifacts ---
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+.tmp/
+.temp/
+.cache/
+
+# --- Environment Variables ---
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Testing & Coverage ---
+coverage/
+.nyc_output/
+
+# --- Operating System Artifacts ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# --- IDEs & Editors ---
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# --- AI Agents & Composer Cache ---
+.agents/
+.claude/
+.cursor/
+.devin/
+.prisma-composer/
+
+# --- Mobile (Android / Kotlin) ---
+.gradle/
+captures/
+local.properties
+*.iml
+.externalNativeBuild/
+.cxx/
+/mobile/.idea/
+/mobile/.gradle/
+/mobile/build/
+/mobile/app/build/
+/mobile/local.properties
+/mobile/*.iml
+
+# --- Runtime Data ---
+pids
+*.pid
+*.seed
+*.pid.lock
