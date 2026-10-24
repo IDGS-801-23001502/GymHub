@@ -22,7 +22,7 @@ jobs:
           git config --global user.email "actions@github.com"
 
           # URL de tu repositorio de Azure DevOps con autenticación mediante PAT
-          AZURE_REPO_URL="https://azapp:${AZURE_PAT}@dev.azure.com/DevByteStudios/Gym-Hub/_git/Gym-Hub"
+          AZURE_REPO_URL="https://GYMHUB:${AZURE_PAT}@dev.azure.com/GYMHUB/GYMHUB/_git/GYMHUB"
 
           # Añade Azure DevOps como un remoto temporal
           git remote add azure "$AZURE_REPO_URL"
