@@ -68,3 +68,10 @@ pids
 
 # --- Diagnostic Reports ---
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# --- Cliente Prisma generado (se regenera con `npm run prisma:generate`) ---
+/src/generated
+
+# Archivos subidos
+uploads/
+backups/

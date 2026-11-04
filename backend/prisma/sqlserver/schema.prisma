@@ -1,15 +1,650 @@
+// Esquema Prisma (SQL Server) solo para generar el cliente tipado.
+// La base se crea con database/sqlserver/gimnasio_crm.sql; no usar `prisma db push`,
+// porque borraría las tablas que aún no están modeladas aquí.
+
 datasource db {
   provider = "sqlserver"
-  url      = env("AZURE_SQLSERVER_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../node_modules/@prisma/sqlserver-client"
+  provider            = "prisma-client"
+  output              = "../../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
 }
 
-model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  name  String?
+// Sedes, roles y usuarios del personal
+
+model Sede {
+  id_sede          Int       @id @default(autoincrement())
+  nombre           String    @unique @db.NVarChar(100)
+  direccion        String?   @db.NVarChar(255)
+  telefono         String?   @db.NVarChar(20)
+  horario_apertura DateTime? @db.Time
+  horario_cierre   DateTime? @db.Time
+  activa           Boolean   @default(true)
+  creado_en        DateTime  @default(now()) @db.DateTime2
+
+  usuarios    UsuarioSede[]
+  socios      Socio[]
+  pagos       Pago[]
+  config      ConfigRiesgo?
+  horarios    SedeHorario[]
+  asistencias Asistencia[]
+
+  @@map("sede")
+}
+
+model Rol {
+  id_rol      Int       @id @default(autoincrement()) @db.TinyInt
+  nombre      String    @unique @db.NVarChar(30)
+  descripcion String?   @db.NVarChar(150)
+  usuarios    Usuario[]
+
+  @@map("rol")
+}
+
+model Usuario {
+  id_usuario        Int       @id @default(autoincrement())
+  id_rol            Int       @db.TinyInt
+  nombre            String    @db.NVarChar(120)
+  correo            String    @unique @db.NVarChar(150)
+  password_hash     String    @db.NVarChar(255)
+  es_admin_general  Boolean   @default(false)
+  activo            Boolean   @default(true)
+  intentos_fallidos Int       @default(0) @db.TinyInt
+  bloqueado_hasta   DateTime? @db.DateTime2
+  ultimo_acceso     DateTime? @db.DateTime2
+  creado_en         DateTime  @default(now()) @db.DateTime2
+  actualizado_en    DateTime  @default(now()) @db.DateTime2
+
+  rol                 Rol                      @relation(fields: [id_rol], references: [id_rol], onDelete: NoAction, onUpdate: NoAction)
+  sedes               UsuarioSede[]
+  socios_creados      Socio[]                  @relation("SocioCreador")
+  fichas_actualizadas FichaSalud[]
+  membresias_creadas  Membresia[]
+  congelamientos      CongelamientoMembresia[]
+  pagos_registrados   Pago[]                   @relation("PagoRegistrador")
+  pagos_autorizados   Pago[]                   @relation("PagoAutorizador")
+  interacciones       InteraccionSocio[]
+  rutinas_asignadas   RutinaAsignada[]
+  versiones_rutina    RutinaVersion[]
+  sesiones            SesionUsuario[]
+  solicitudes_arco    SolicitudArco[]
+  asistencias         Asistencia[]
+  segmentos           Segmento[]
+  acciones_riesgo     AccionRiesgo[]
+  campanas            Campana[]
+
+  @@map("usuario")
+}
+
+model UsuarioSede {
+  id_usuario Int
+  id_sede    Int
+  usuario    Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  sede       Sede    @relation(fields: [id_sede], references: [id_sede], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_usuario, id_sede])
+  @@map("usuario_sede")
+}
+
+// Socios (CRM-RF-01)
+
+model Socio {
+  id_socio                    Int       @id @default(autoincrement())
+  folio                       String    @unique @db.NVarChar(20)
+  id_sede                     Int
+  nombre                      String    @db.NVarChar(120)
+  fecha_nacimiento            DateTime  @db.Date
+  telefono_cifrado            Bytes     @db.VarBinary(512)
+  telefono_hash               String    @unique(map: "uq_socio_telefono") @db.Char(64)
+  correo_cifrado              Bytes     @db.VarBinary(512)
+  correo_hash                 String    @unique(map: "uq_socio_correo") @db.Char(64)
+  contacto_emergencia_cifrado Bytes     @db.VarBinary(1024)
+  foto_url                    String?   @db.NVarChar(255)
+  objetivo                    String?   @db.VarChar(20)
+  estado                      String    @default("activo") @db.VarChar(10)
+  fecha_alta                  DateTime  @default(dbgenerated("CONVERT([date],getdate())")) @db.Date
+  fecha_baja                  DateTime? @db.Date
+  motivo_baja                 String?   @db.NVarChar(255)
+  creado_por                  Int?
+  creado_en                   DateTime  @default(now()) @db.DateTime2
+  actualizado_en              DateTime  @default(now()) @db.DateTime2
+
+  sede             Sede                      @relation(fields: [id_sede], references: [id_sede], onDelete: NoAction, onUpdate: NoAction)
+  creador          Usuario?                  @relation("SocioCreador", fields: [creado_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  consentimientos  Consentimiento[]
+  fichas_salud     FichaSalud[]
+  membresias       Membresia[]
+  pagos            Pago[]
+  interacciones    InteraccionSocio[]
+  rutinas          RutinaAsignada[]
+  sesiones         SesionEntrenamiento[]
+  cuenta_app       CuentaApp?
+  sesiones_app     SesionApp[]
+  recuperaciones   RecuperacionPassword[]
+  datos_salud      DatoSalud[]
+  sincronizaciones SincronizacionSalud[]
+  dispositivos     DispositivoPush[]
+  preferencias     PreferenciaNotificacion[]
+  notificaciones   Notificacion[]
+  asistencias      Asistencia[]
+  solicitudes_arco SolicitudArco[]
+  riesgos          RiesgoDesercion[]
+  campanas         Campana[]
+
+  @@index([id_sede, estado], map: "idx_socio_sede_estado")
+  @@index([nombre], map: "idx_socio_nombre")
+  @@map("socio")
+}
+
+model AvisoPrivacidad {
+  id_aviso        Int              @id @default(autoincrement())
+  version         String           @unique @db.NVarChar(20)
+  contenido       String           @db.NVarChar(Max)
+  vigente_desde   DateTime         @db.Date
+  consentimientos Consentimiento[]
+
+  @@map("aviso_privacidad")
+}
+
+model Consentimiento {
+  id_consentimiento Int      @id @default(autoincrement())
+  id_socio          Int
+  tipo              String   @db.VarChar(20)
+  id_aviso          Int?
+  otorgado          Boolean
+  fecha             DateTime @default(now()) @db.DateTime2
+  origen            String   @db.VarChar(5)
+
+  socio Socio            @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  aviso AvisoPrivacidad? @relation(fields: [id_aviso], references: [id_aviso], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio, tipo, fecha], map: "idx_consent_socio_tipo")
+  @@map("consentimiento")
+}
+
+// Ficha de salud versionada (CRM-RF-05)
+
+model FichaSalud {
+  id_ficha                Int      @id @default(autoincrement())
+  id_socio                Int
+  version                 Int
+  datos_cifrados          Bytes    @db.VarBinary(Max)
+  nivel_actividad         String?  @db.VarChar(12)
+  objetivo                String?  @db.NVarChar(100)
+  restricciones_rutina    String?  @db.NVarChar(Max)
+  origen                  String   @db.VarChar(5)
+  borrador                Boolean  @default(false)
+  actualizado_por_usuario Int?
+  creado_en               DateTime @default(now()) @db.DateTime2
+
+  socio           Socio    @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  actualizado_por Usuario? @relation(fields: [actualizado_por_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([id_socio, version], map: "uq_ficha_version")
+  @@map("ficha_salud")
+}
+
+// Planes, membresías y pagos (CRM-RF-02, 03, 04)
+
+model PlanMembresia {
+  id_plan       Int      @id @default(autoincrement())
+  nombre        String   @unique @db.NVarChar(80)
+  tipo          String   @db.VarChar(12)
+  duracion_dias Int
+  precio        Decimal  @db.Decimal(10, 2)
+  beneficios    String?  @db.NVarChar(Max)
+  activo        Boolean  @default(true)
+  creado_en     DateTime @default(now()) @db.DateTime2
+
+  membresias Membresia[]
+  pagos      Pago[]
+
+  @@map("plan_membresia")
+}
+
+model Membresia {
+  id_membresia          Int      @id @default(autoincrement())
+  id_socio              Int
+  id_plan               Int
+  fecha_inicio          DateTime @db.Date
+  fecha_vencimiento     DateTime @db.Date
+  estado                String   @default("activa") @db.VarChar(12)
+  es_renovacion         Boolean  @default(false)
+  id_membresia_anterior Int?
+  creada_por            Int?
+  creada_en             DateTime @default(now()) @db.DateTime2
+
+  socio          Socio                    @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  plan           PlanMembresia            @relation(fields: [id_plan], references: [id_plan], onDelete: NoAction, onUpdate: NoAction)
+  anterior       Membresia?               @relation("Renovacion", fields: [id_membresia_anterior], references: [id_membresia], onDelete: NoAction, onUpdate: NoAction)
+  renovaciones   Membresia[]              @relation("Renovacion")
+  creador        Usuario?                 @relation(fields: [creada_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  congelamientos CongelamientoMembresia[]
+  pagos          Pago[]
+
+  asistencias Asistencia[]
+
+  @@index([id_socio, fecha_vencimiento], map: "idx_membresia_socio")
+  @@index([estado, fecha_vencimiento], map: "idx_membresia_estado_venc")
+  @@map("membresia")
+}
+
+model CongelamientoMembresia {
+  id_congelamiento Int      @id @default(autoincrement())
+  id_membresia     Int
+  fecha_inicio     DateTime @db.Date
+  fecha_fin        DateTime @db.Date
+  dias_extendidos  Int      @default(0)
+  motivo           String?  @db.NVarChar(255)
+  registrado_por   Int?
+  creado_en        DateTime @default(now()) @db.DateTime2
+
+  membresia Membresia @relation(fields: [id_membresia], references: [id_membresia], onDelete: NoAction, onUpdate: NoAction)
+  usuario   Usuario?  @relation(fields: [registrado_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("congelamiento_membresia")
+}
+
+model Pago {
+  id_pago            BigInt    @id @default(autoincrement())
+  folio              String    @unique @db.NVarChar(25)
+  id_socio           Int
+  id_membresia       Int
+  id_plan            Int
+  id_sede            Int
+  monto              Decimal   @db.Decimal(10, 2)
+  metodo             String    @db.VarChar(15)
+  referencia         String?   @db.NVarChar(80)
+  estado             String    @default("registrado") @db.VarChar(12)
+  fecha_pago         DateTime  @default(now()) @db.DateTime2
+  registrado_por     Int
+  motivo_cancelacion String?   @db.NVarChar(255)
+  autorizado_por     Int?
+  cancelado_en       DateTime? @db.DateTime2
+
+  socio       Socio         @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  membresia   Membresia     @relation(fields: [id_membresia], references: [id_membresia], onDelete: NoAction, onUpdate: NoAction)
+  plan        PlanMembresia @relation(fields: [id_plan], references: [id_plan], onDelete: NoAction, onUpdate: NoAction)
+  sede        Sede          @relation(fields: [id_sede], references: [id_sede], onDelete: NoAction, onUpdate: NoAction)
+  registrador Usuario       @relation("PagoRegistrador", fields: [registrado_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  autorizador Usuario?      @relation("PagoAutorizador", fields: [autorizado_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio, fecha_pago], map: "idx_pago_socio")
+  @@index([id_sede, fecha_pago], map: "idx_pago_sede_fecha")
+  @@map("pago")
+}
+
+// Configuración, interacciones y bitácora
+
+model ConfigRiesgo {
+  id_config              Int      @id @default(autoincrement())
+  id_sede                Int?     @unique(map: "uq_config_sede")
+  dias_inactividad       Int      @default(10) @db.SmallInt
+  dias_aviso_vencimiento Int      @default(7) @db.SmallInt
+  activa                 Boolean  @default(true)
+  actualizado_en         DateTime @default(now()) @db.DateTime2
+
+  sede Sede? @relation(fields: [id_sede], references: [id_sede], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("config_riesgo")
+}
+
+model InteraccionSocio {
+  id_interaccion BigInt   @id @default(autoincrement())
+  id_socio       Int
+  tipo           String   @db.VarChar(15)
+  descripcion    String   @db.NVarChar(1000)
+  id_usuario     Int?
+  fecha          DateTime @default(now()) @db.DateTime2
+
+  socio   Socio    @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio, fecha], map: "idx_inter_socio_fecha")
+  @@map("interaccion_socio")
+}
+
+model BitacoraAuditoria {
+  id_bitacora    BigInt   @id @default(autoincrement())
+  id_usuario     Int?
+  id_socio       Int?
+  entidad        String   @db.NVarChar(50)
+  id_entidad     String?  @db.NVarChar(40)
+  accion         String   @db.VarChar(15)
+  valor_anterior String?  @db.NVarChar(Max)
+  valor_nuevo    String?  @db.NVarChar(Max)
+  ip             String?  @db.NVarChar(45)
+  fecha          DateTime @default(now()) @db.DateTime2
+
+  @@index([fecha], map: "idx_bit_fecha")
+  @@index([id_usuario, fecha], map: "idx_bit_usuario")
+  @@index([entidad, accion, fecha], map: "idx_bit_entidad")
+  @@map("bitacora_auditoria")
+}
+
+// Rutinas (CRM-RF-08 a CRM-RF-10). El contenido vive en MongoDB.
+
+model RutinaAsignada {
+  id_rutina                 Int       @id @default(autoincrement())
+  id_socio                  Int
+  plantilla_mongo_id        String    @db.Char(24)
+  id_entrenador             Int
+  estado                    String    @default("vigente") @db.VarChar(12)
+  sesiones_planeadas_semana Int       @default(3) @db.TinyInt
+  fecha_inicio              DateTime  @db.Date
+  fecha_fin                 DateTime? @db.Date
+  creada_en                 DateTime  @default(now()) @db.DateTime2
+
+  socio      Socio                 @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  entrenador Usuario               @relation(fields: [id_entrenador], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  versiones  RutinaVersion[]
+  sesiones   SesionEntrenamiento[]
+
+  @@index([id_socio, estado], map: "idx_rutina_socio_estado")
+  @@map("rutina_asignada")
+}
+
+model RutinaVersion {
+  id_version         Int      @id @default(autoincrement())
+  id_rutina          Int
+  numero_version     Int
+  contenido_mongo_id String   @db.Char(24)
+  motivo             String?  @db.NVarChar(255)
+  autor              Int
+  fecha              DateTime @default(now()) @db.DateTime2
+
+  rutina   RutinaAsignada        @relation(fields: [id_rutina], references: [id_rutina], onDelete: NoAction, onUpdate: NoAction)
+  usuario  Usuario               @relation(fields: [autor], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  sesiones SesionEntrenamiento[]
+
+  @@unique([id_rutina, numero_version], map: "uq_rutina_version")
+  @@map("rutina_version")
+}
+
+model SesionEntrenamiento {
+  id_sesion       BigInt    @id @default(autoincrement())
+  id_socio        Int
+  id_rutina       Int?
+  id_version      Int?
+  uuid_cliente    String    @unique @db.Char(36)
+  fecha_inicio    DateTime  @db.DateTime2
+  fecha_fin       DateTime? @db.DateTime2
+  duracion_min    Int?      @db.SmallInt
+  detalle         String    @db.NVarChar(Max)
+  calorias        Decimal?  @db.Decimal(8, 2)
+  fc_promedio     Int?      @db.SmallInt
+  fc_maxima       Int?      @db.SmallInt
+  pasos           Int?
+  completada      Boolean   @default(true)
+  sincronizada_en DateTime  @default(now()) @db.DateTime2
+
+  socio   Socio           @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  rutina  RutinaAsignada? @relation(fields: [id_rutina], references: [id_rutina], onDelete: NoAction, onUpdate: NoAction)
+  version RutinaVersion?  @relation(fields: [id_version], references: [id_version], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio, fecha_inicio], map: "idx_sesent_socio_fecha")
+  @@map("sesion_entrenamiento")
+}
+
+// App móvil del socio (APP-RF-01 a APP-RF-14)
+
+model CuentaApp {
+  id_socio          Int       @id
+  password_hash     String?   @db.NVarChar(255)
+  activada          Boolean   @default(false)
+  activada_en       DateTime? @db.DateTime2
+  intentos_fallidos Int       @default(0) @db.TinyInt
+  bloqueada_hasta   DateTime? @db.DateTime2
+  ultimo_acceso     DateTime? @db.DateTime2
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("cuenta_app")
+}
+
+model SesionApp {
+  id_sesion_app      BigInt   @id @default(autoincrement())
+  id_socio           Int
+  refresh_token_hash String   @unique @db.Char(64)
+  dispositivo        String?  @db.NVarChar(100)
+  creada_en          DateTime @default(now()) @db.DateTime2
+  expira_en          DateTime @db.DateTime2
+  revocada           Boolean  @default(false)
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("sesion_app")
+}
+
+model RecuperacionPassword {
+  id_recuperacion Int      @id @default(autoincrement())
+  id_socio        Int
+  token_hash      String   @unique @db.Char(64)
+  expira_en       DateTime @db.DateTime2
+  usado           Boolean  @default(false)
+  creado_en       DateTime @default(now()) @db.DateTime2
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("recuperacion_password")
+}
+
+model DatoSalud {
+  id_dato         BigInt   @id @default(autoincrement())
+  id_socio        Int
+  tipo            String   @db.VarChar(20)
+  valor           Decimal  @db.Decimal(10, 2)
+  inicio_medicion DateTime @db.DateTime2
+  fin_medicion    DateTime @db.DateTime2
+  origen          String   @default("health_connect") @db.NVarChar(50)
+  recibido_en     DateTime @default(now()) @db.DateTime2
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([id_socio, tipo, inicio_medicion, fin_medicion], map: "uq_dato_dedup")
+  @@map("dato_salud")
+}
+
+model SincronizacionSalud {
+  id_sync             BigInt   @id @default(autoincrement())
+  id_socio            Int
+  fecha_sync          DateTime @default(now()) @db.DateTime2
+  registros_recibidos Int      @default(0)
+  exitosa             Boolean  @default(true)
+  detalle_error       String?  @db.NVarChar(255)
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio, fecha_sync], map: "idx_sync_socio")
+  @@map("sincronizacion_salud")
+}
+
+model DispositivoPush {
+  id_dispositivo Int      @id @default(autoincrement())
+  id_socio       Int
+  fcm_token      String   @unique @db.NVarChar(255)
+  plataforma     String   @default("android") @db.NVarChar(20)
+  activo         Boolean  @default(true)
+  actualizado_en DateTime @default(now()) @db.DateTime2
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio], map: "idx_disp_socio")
+  @@map("dispositivo_push")
+}
+
+model PreferenciaNotificacion {
+  id_socio   Int
+  categoria  String  @db.VarChar(15)
+  habilitada Boolean @default(true)
+
+  socio Socio @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_socio, categoria])
+  @@map("preferencia_notificacion")
+}
+
+model Notificacion {
+  id_notificacion BigInt    @id @default(autoincrement())
+  id_campana      Int?
+  id_socio        Int
+  origen          String    @db.VarChar(30)
+  categoria       String    @db.VarChar(15)
+  titulo          String    @db.NVarChar(120)
+  contenido       String    @db.NVarChar(500)
+  estado          String    @default("pendiente") @db.VarChar(12)
+  intentos        Int       @default(0) @db.TinyInt
+  error           String?   @db.NVarChar(255)
+  fcm_message_id  String?   @db.NVarChar(255)
+  creada_en       DateTime  @default(now()) @db.DateTime2
+  enviada_en      DateTime? @db.DateTime2
+  entregada_en    DateTime? @db.DateTime2
+  leida_en        DateTime? @db.DateTime2
+
+  socio   Socio    @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  campana Campana? @relation(fields: [id_campana], references: [id_campana], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([estado, creada_en], map: "idx_notif_estado")
+  @@map("notificacion")
+}
+
+// Sedes y seguridad (CRM-RF-18 a CRM-RF-20, CRM-RNF-02)
+
+model SedeHorario {
+  id_horario    Int      @id @default(autoincrement())
+  id_sede       Int
+  dia_semana    Int      @db.TinyInt
+  hora_apertura DateTime @db.Time
+  hora_cierre   DateTime @db.Time
+
+  sede Sede @relation(fields: [id_sede], references: [id_sede], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([id_sede, dia_semana], map: "uq_sede_dia")
+  @@map("sede_horario")
+}
+
+model SesionUsuario {
+  id_sesion  BigInt   @id @default(autoincrement())
+  id_usuario Int
+  token_hash String   @unique @db.Char(64)
+  ip         String?  @db.NVarChar(45)
+  creada_en  DateTime @default(now()) @db.DateTime2
+  expira_en  DateTime @db.DateTime2
+  revocada   Boolean  @default(false)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_usuario], map: "idx_sesion_usuario")
+  @@map("sesion_usuario")
+}
+
+model SolicitudArco {
+  id_solicitud Int       @id @default(autoincrement())
+  id_socio     Int
+  tipo         String    @db.VarChar(15)
+  descripcion  String?   @db.NVarChar(500)
+  estado       String    @default("recibida") @db.VarChar(15)
+  atendida_por Int?
+  creada_en    DateTime  @default(now()) @db.DateTime2
+  atendida_en  DateTime? @db.DateTime2
+
+  socio   Socio    @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  usuario Usuario? @relation(fields: [atendida_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("solicitud_arco")
+}
+
+// Asistencia (CRM-RF-11)
+
+model Asistencia {
+  id_asistencia    BigInt   @id @default(autoincrement())
+  id_socio         Int
+  id_sede          Int
+  id_membresia     Int?
+  fecha_hora       DateTime @default(now()) @db.DateTime2
+  metodo_registro  String   @db.VarChar(10)
+  estado_membresia String   @db.VarChar(12)
+  registrado_por   Int
+
+  socio     Socio      @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  sede      Sede       @relation(fields: [id_sede], references: [id_sede], onDelete: NoAction, onUpdate: NoAction)
+  membresia Membresia? @relation(fields: [id_membresia], references: [id_membresia], onDelete: NoAction, onUpdate: NoAction)
+  usuario   Usuario    @relation(fields: [registrado_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_socio, fecha_hora], map: "idx_asist_socio_fecha")
+  @@index([id_sede, fecha_hora], map: "idx_asist_sede_fecha")
+  @@map("asistencia")
+}
+
+// Retención y comunicación (CRM-RF-12 a CRM-RF-14)
+
+model Segmento {
+  id_segmento Int      @id @default(autoincrement())
+  nombre      String   @unique @db.NVarChar(100)
+  descripcion String?  @db.NVarChar(255)
+  filtros     String   @db.NVarChar(Max)
+  creado_por  Int
+  creado_en   DateTime @default(now()) @db.DateTime2
+
+  usuario  Usuario   @relation(fields: [creado_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  campanas Campana[]
+
+  @@map("segmento")
+}
+
+model RiesgoDesercion {
+  id_riesgo    Int       @id @default(autoincrement())
+  id_socio     Int
+  motivo       String    @db.VarChar(25)
+  detalle      String?   @db.NVarChar(255)
+  estado       String    @default("abierto") @db.VarChar(12)
+  detectado_en DateTime  @default(now()) @db.DateTime2
+  cerrado_en   DateTime? @db.DateTime2
+
+  socio    Socio          @relation(fields: [id_socio], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  acciones AccionRiesgo[]
+
+  @@index([estado, detectado_en], map: "idx_riesgo_estado")
+  @@index([id_socio], map: "idx_riesgo_socio")
+  @@map("riesgo_desercion")
+}
+
+model AccionRiesgo {
+  id_accion     Int      @id @default(autoincrement())
+  id_riesgo     Int
+  tipo_accion   String   @db.VarChar(15)
+  descripcion   String?  @db.NVarChar(500)
+  realizada_por Int
+  fecha         DateTime @default(now()) @db.DateTime2
+
+  riesgo  RiesgoDesercion @relation(fields: [id_riesgo], references: [id_riesgo], onDelete: NoAction, onUpdate: NoAction)
+  usuario Usuario         @relation(fields: [realizada_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("accion_riesgo")
+}
+
+model Campana {
+  id_campana       Int       @id @default(autoincrement())
+  titulo           String    @db.NVarChar(120)
+  contenido        String    @db.NVarChar(500)
+  categoria        String    @default("avisos") @db.VarChar(15)
+  tipo_destino     String    @db.VarChar(10)
+  id_socio_destino Int?
+  id_segmento      Int?
+  modo_envio       String    @default("inmediato") @db.VarChar(12)
+  programada_para  DateTime? @db.DateTime2
+  estado           String    @default("borrador") @db.VarChar(12)
+  creada_por       Int
+  creada_en        DateTime  @default(now()) @db.DateTime2
+
+  socio          Socio?         @relation(fields: [id_socio_destino], references: [id_socio], onDelete: NoAction, onUpdate: NoAction)
+  segmento       Segmento?      @relation(fields: [id_segmento], references: [id_segmento], onDelete: NoAction, onUpdate: NoAction)
+  usuario        Usuario        @relation(fields: [creada_por], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  notificaciones Notificacion[]
+
+  @@index([estado, programada_para], map: "idx_campana_estado")
+  @@map("campana")
 }

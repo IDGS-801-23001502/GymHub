@@ -20,15 +20,33 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "prisma:generate": "npx prisma generate --schema=prisma/sqlserver/schema.prisma && npx prisma generate --schema=prisma/mongodb/schema.prisma",
-    "db:push:sql": "npx prisma db push --schema=prisma/sqlserver/schema.prisma",
-    "db:push:mongo": "npx prisma db push --schema=prisma/mongodb/schema.prisma"
+    "test:cov:total": "vitest run --config ./vitest.config.cov.ts --coverage",
+    "prisma:generate": "prisma generate",
+    "token:dev": "node scripts/token-dev.mjs",
+    "claves:rotar": "node dist/cli/rotar-claves.js",
+    "respaldo": "node scripts/respaldo.mjs",
+    "postinstall": "prisma generate",
+    "prebuild": "prisma generate",
+    "db:pull:check": "prisma db pull --print",
+    "usuario:password": "node scripts/usuario-password.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.0.1",
+    "@nestjs/jwt": "^12.0.3",
+    "@nestjs/mapped-types": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/swagger": "^12.1.0",
+    "@prisma/adapter-mssql": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^6.5.4",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "firebase-admin": "^14.5.0",
+    "mongodb": "^7.8.0",
+    "nodemailer": "^10.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -38,7 +56,9 @@
     "@nestjs/schematics": "^12.0.0",
     "@nestjs/testing": "^12.0.1",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.3.0",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.2",
     "oxlint": "^1.58.0",
@@ -52,6 +72,8 @@
   },
   "allowScripts": {
     "esbuild@0.28.2": true,
-    "workerd@1.20261002.1": true
+    "workerd@1.20261002.1": true,
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true
   }
 }
