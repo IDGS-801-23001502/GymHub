@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Queue, Worker } from 'bullmq';
 import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
+import { Redis } from 'ioredis';
 import { idNumero } from '../common/utils/serializar.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -42,6 +43,7 @@ export class NotificacionesService implements OnModuleInit, OnModuleDestroy {
   private firebase: App | null = null;
   private cola: Queue | null = null;
   private worker: Worker | null = null;
+  private readonly conexiones: Redis[] = [];
   private sondeo: NodeJS.Timeout | null = null;
   private procesando = false;
 
@@ -59,14 +61,20 @@ export class NotificacionesService implements OnModuleInit, OnModuleDestroy {
     this.firebase = this.iniciarFirebase();
     const redis = this.config.get<string>('REDIS_URL');
     if (redis) {
-      const conexion = { url: redis, maxRetriesPerRequest: null };
-      this.cola = new Queue(COLA, { connection: conexion });
+      // BullMQ 6 no trae ioredis y en ESM exige clientes ya construidos (uno por cola/worker).
+      const nuevaConexion = () => {
+        const cliente = new Redis(redis, { maxRetriesPerRequest: null });
+        cliente.on('error', (err) => this.logger.warn(`Redis: ${err.message}`));
+        this.conexiones.push(cliente);
+        return cliente;
+      };
+      this.cola = new Queue(COLA, { connection: nuevaConexion() });
       this.worker = new Worker(
         COLA,
         async (job) => {
           await this.enviar(Number(job.data.id));
         },
-        { connection: conexion, concurrency: 5 },
+        { connection: nuevaConexion(), concurrency: 5 },
       );
       this.worker.on('failed', (job, err) => this.logger.warn(`Notificación ${job?.data?.id} falló: ${err.message}`));
       this.logger.log('Cola de notificaciones: Redis (BullMQ).');
@@ -81,6 +89,8 @@ export class NotificacionesService implements OnModuleInit, OnModuleDestroy {
     if (this.sondeo) clearInterval(this.sondeo);
     await this.worker?.close();
     await this.cola?.close();
+    // BullMQ no cierra los clientes que se le pasan ya construidos.
+    await Promise.all(this.conexiones.map((c) => c.quit().catch(() => undefined)));
   }
 
   /**

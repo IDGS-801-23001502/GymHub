@@ -1,1 +1,3 @@
-/buildgoogle-services.json
+/build
+google-services.json
+*firebase-adminsdk*.json

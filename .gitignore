@@ -94,3 +94,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+# --- Credenciales de Firebase (nunca subir) ---
+firebase-service-account.json
+*firebase-adminsdk*.json
+google-services.json

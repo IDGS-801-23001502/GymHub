@@ -8,4 +8,6 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  // Escucha en todas las interfaces para abrir el CRM desde la red de ZeroTier
+  server: { host: true },
 })
