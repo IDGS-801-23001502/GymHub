@@ -99,14 +99,14 @@ export function EditorBloques({
     <div className="espaciado">
       {bloques.map((b, i) => (
         <section key={i} className="bloque">
-          <div className="bloque-titulo fila" style={{ justifyContent: 'space-between' }}>
+          <div className="bloque-titulo fila justify-between">
             <div className="fila">
               <span className="bloque-n">{i + 1}</span>
               <select
                 aria-label={`Tipo del bloque ${i + 1}`}
                 value={b.tipo}
                 onChange={(e) => actualizarBloque(i, { tipo: e.target.value as TipoBloque })}
-                style={{ width: 'auto' }}
+                className="w-auto"
               >
                 {Object.entries(TIPOS_BLOQUE).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -182,7 +182,7 @@ export function EditorBloques({
       ))}
 
       <div className="fila">
-        <select aria-label="Tipo de bloque nuevo" value={tipoNuevo} onChange={(e) => setTipoNuevo(e.target.value as TipoBloque)} style={{ width: 'auto' }}>
+        <select aria-label="Tipo de bloque nuevo" value={tipoNuevo} onChange={(e) => setTipoNuevo(e.target.value as TipoBloque)} className="w-auto">
           {Object.entries(TIPOS_BLOQUE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <button type="button" className="btn" onClick={() => alCambiar([...bloques, { tipo: tipoNuevo, ejercicios: [] }])}>

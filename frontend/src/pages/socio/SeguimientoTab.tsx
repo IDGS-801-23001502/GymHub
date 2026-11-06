@@ -46,11 +46,11 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
 
   const v = visitas.datos;
   return (
-    <div className="rejilla" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)', alignItems: 'start' }}>
+    <div className="rejilla grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-start">
       <div className="tarjeta">
         <div className="tarjeta-titulo">
           <h2>Historial de interacciones</h2>
-          <select aria-label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} style={{ width: 170, minHeight: 32 }}>
+          <select aria-label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} className="w-42.5 min-h-8">
             <option value="">Todas</option>
             {Object.entries(TIPOS).map(([k, x]) => (
               <option key={k} value={k}>
@@ -61,7 +61,7 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
         </div>
         <div className="tarjeta-cuerpo espaciado">
           {puede('recepcionista', 'entrenador') && (
-            <div className="espaciado" style={{ gap: 8 }}>
+            <div className="espaciado gap-2">
               <div className="chips">
                 <button className="chip" aria-pressed={nueva === 'nota'} onClick={() => setNueva('nota')}>
                   Nota
@@ -77,7 +77,7 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
               />
-              <div className="fila" style={{ justifyContent: 'flex-end' }}>
+              <div className="fila justify-end">
                 <button className="btn btn-primario btn-sm" disabled={!texto.trim() || guardando} onClick={() => void agregar()}>
                   Agregar
                 </button>
@@ -95,13 +95,13 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
               {historial.datos.map((i) => (
                 <li key={i.id_interaccion}>
                   <div>
-                    <div className="fila" style={{ gap: 8 }}>
+                    <div className="fila gap-2">
                       <span className={`badge ${TIPOS[i.tipo]?.clase ?? 'badge-neutro'}`}>{TIPOS[i.tipo]?.texto ?? i.tipo}</span>
                       <span className="pequeno muted">
                         {formatoFechaHora(i.fecha)} · {i.responsable}
                       </span>
                     </div>
-                    <p style={{ marginTop: 4 }}>{i.descripcion}</p>
+                    <p className="mt-1">{i.descripcion}</p>
                   </div>
                 </li>
               ))}
@@ -111,9 +111,9 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
       </div>
 
       <div className="espaciado">
-        <div className="kpis" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="kpis grid-cols-[1fr_1fr]">
           <Kpi etiqueta="Visitas 30 días" valor={v?.visitas_30_dias ?? '—'} />
-          <Kpi etiqueta="Última visita" valor={<span style={{ fontSize: '1rem' }}>{v?.ultima_visita ? formatoFechaHora(v.ultima_visita) : 'Nunca'}</span>} />
+          <Kpi etiqueta="Última visita" valor={<span className="text-[1rem]">{v?.ultima_visita ? formatoFechaHora(v.ultima_visita) : 'Nunca'}</span>} />
         </div>
         <div className="tarjeta">
           <div className="tarjeta-titulo">
@@ -125,7 +125,7 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
           ) : !v.registros.length ? (
             <div className="vacio">Sin visitas registradas.</div>
           ) : (
-            <div className="tabla-envoltura" style={{ maxHeight: 340 }}>
+            <div className="tabla-envoltura max-h-85">
               <table>
                 <tbody>
                   {v.registros.map((r) => (
@@ -145,7 +145,7 @@ export function SeguimientoTab({ socio }: { socio: SocioDetalle }) {
           )}
         </div>
         {puede('recepcionista') && (
-          <div className="tarjeta tarjeta-cuerpo espaciado" style={{ gap: 8 }}>
+          <div className="tarjeta tarjeta-cuerpo espaciado gap-2">
             <h3>Privacidad</h3>
             <p className="pequeno muted">Registra aquí si el socio pide acceder, corregir, cancelar u oponerse al uso de sus datos.</p>
             <button className="btn btn-sm" onClick={() => setArco(true)}>

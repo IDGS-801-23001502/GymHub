@@ -58,7 +58,7 @@ export function EjerciciosPage() {
             {grupos.datos?.map((g) => <option key={g} value={g}>{nombreGrupo(g)}</option>)}
           </select>
         </div>
-        <label className="casilla" style={{ alignSelf: 'center' }}>
+        <label className="casilla self-center">
           <input type="checkbox" checked={inactivos} onChange={(e) => setInactivos(e.target.checked)} />
           Mostrar desactivados
         </label>
@@ -86,7 +86,7 @@ export function EjerciciosPage() {
                     <th />
                   </tr>
                 </thead>
-                <tbody style={{ opacity: cargando ? 0.6 : 1 }}>
+                <tbody className={cargando ? 'opacity-60' : undefined}>
                   {datos?.map((e) => (
                     <tr key={e.id}>
                       <td>
@@ -98,7 +98,7 @@ export function EjerciciosPage() {
                           </a>
                         )}
                       </td>
-                      <td style={{ textTransform: 'capitalize' }}>{nombreGrupo(e.grupo_muscular)}</td>
+                      <td className="capitalize">{nombreGrupo(e.grupo_muscular)}</td>
                       <td>{e.equipo}</td>
                       <td>
                         <div className="chips">
@@ -110,7 +110,7 @@ export function EjerciciosPage() {
                       </td>
                       <td>{e.activo ? <span className="badge badge-ok">Activo</span> : <span className="badge badge-neutro">Desactivado</span>}</td>
                       <td className="num">
-                        <div className="fila" style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                        <div className="fila justify-end flex-nowrap">
                           <button className="btn btn-sm" onClick={() => setEditando(e)}>Editar</button>
                           <button className={`btn btn-sm${e.activo ? ' btn-peligro' : ''}`} onClick={() => alternar(e)}>
                             {e.activo ? 'Desactivar' : 'Activar'}
@@ -241,9 +241,9 @@ function EjercicioModal({
         <div className="rejilla rejilla-2">
           <Campo etiqueta="Imagen o video (opcional)" ayuda="Pega una URL o sube un archivo (JPG, PNG, WebP hasta 5 MB; MP4/WebM hasta 40 MB).">
             {(p) => (
-              <div className="fila" style={{ flexWrap: 'nowrap' }}>
+              <div className="fila flex-nowrap">
                 <input {...p} value={f.media_url} onChange={(e) => set('media_url', e.target.value)} placeholder="https://…" />
-                <label className="btn" style={{ flex: 'none' }}>
+                <label className="btn flex-none">
                   {subiendo ? 'Subiendo…' : 'Subir'}
                   <input
                     type="file"
@@ -266,7 +266,7 @@ function EjercicioModal({
           </Campo>
         </div>
         <div className="campo">
-          <span className="pequeno" style={{ fontWeight: 600 }}>Contraindicaciones</span>
+          <span className="pequeno font-semibold">Contraindicaciones</span>
           <div className="chips" role="group" aria-label="Contraindicaciones">
             {[...Object.keys(RESTRICCIONES), ...extra].map((r) => (
               <button type="button" key={r} className="chip" aria-pressed={contra.includes(r)} onClick={() => alternar(r)}>

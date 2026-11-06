@@ -111,7 +111,7 @@ export function MapaCalor({ matriz }: { matriz: number[][] }) {
   const horas = Array.from({ length: ultima - primera + 1 }, (_, i) => primera + i);
   return (
     <div>
-      <div className="tabla-envoltura" style={{ position: 'relative' }} onMouseLeave={() => setActivo(null)}>
+      <div className="tabla-envoltura relative" onMouseLeave={() => setActivo(null)}>
         <div className="calor" style={{ gridTemplateColumns: `38px repeat(${horas.length}, minmax(14px, 1fr))` }} role="img" aria-label="Visitas por día de la semana y hora">
           <span />
           {horas.map((h) => (
@@ -120,13 +120,13 @@ export function MapaCalor({ matriz }: { matriz: number[][] }) {
             </span>
           ))}
           {matriz.map((fila, d) => (
-            <div key={DIAS[d]} style={{ display: 'contents' }}>
+            <div key={DIAS[d]} className="contents">
               <span className="eje">{DIAS[d]}</span>
               {horas.map((h) => (
                 <span
                   key={h}
-                  className="celda"
-                  style={{ background: color(fila[h]), outline: activo?.d === d && activo.h === h ? '2px solid #fff' : undefined }}
+                  className={`celda ${activo?.d === d && activo.h === h ? 'outline-2 outline-white' : ''}`}
+                  style={{ background: color(fila[h]) }}
                   onMouseEnter={() => setActivo({ d, h })}
                   title={`${DIAS[d]} ${h}:00–${h + 1}:00 · ${fila[h]} visitas`}
                 />
@@ -135,7 +135,7 @@ export function MapaCalor({ matriz }: { matriz: number[][] }) {
           ))}
         </div>
       </div>
-      <div className="fila" style={{ justifyContent: 'space-between', marginTop: 10 }}>
+      <div className="fila justify-between mt-2.5">
         <span className="pequeno muted">
           {activo ? `${DIAS[activo.d]} de ${activo.h}:00 a ${activo.h + 1}:00 → ${matriz[activo.d][activo.h]} visitas` : 'Pasa el cursor por una celda para ver el detalle.'}
         </span>

@@ -112,7 +112,7 @@ export function AsistenciaPage() {
           <p>Escanea la credencial del socio o búscalo por nombre, teléfono o folio.</p>
         </div>
         {sedes.length > 1 && (
-          <div className="campo" style={{ minWidth: 200 }}>
+          <div className="campo min-w-50">
             <label htmlFor="sede-recepcion">Sede de recepción</label>
             <select id="sede-recepcion" value={idSede} onChange={(e) => setIdSede(Number(e.target.value))}>
               {sedes.map((s) => (
@@ -128,7 +128,7 @@ export function AsistenciaPage() {
       <div className="checkin">
         <div className="tarjeta">
           <div className="tarjeta-cuerpo espaciado">
-            <form onSubmit={enviar} className="fila buscador-grande" style={{ flexWrap: 'nowrap' }}>
+            <form onSubmit={enviar} className="fila buscador-grande flex-nowrap">
               <label htmlFor="buscar-socio" className="solo-lectores">
                 Buscar socio o escanear credencial
               </label>
@@ -143,7 +143,7 @@ export function AsistenciaPage() {
                 disabled={registrando}
               />
               {window.BarcodeDetector && (
-                <button type="button" className="btn" style={{ minHeight: 54 }} onClick={() => setCamara((c) => !c)} aria-pressed={camara}>
+                <button type="button" className="btn min-h-13.5" onClick={() => setCamara((c) => !c)} aria-pressed={camara}>
                   <IconoCamara /> Cámara
                 </button>
               )}
@@ -152,7 +152,7 @@ export function AsistenciaPage() {
             <Alerta mensajes={error} />
             {buscando && <Cargando texto="Buscando…" />}
             {resultados && !buscando && (
-              <div className="espaciado" style={{ gap: 8 }}>
+              <div className="espaciado gap-2">
                 {resultados.length === 0 && <div className="vacio">No se encontró ningún socio.</div>}
                 {resultados.map((s) => (
                   <button
@@ -163,7 +163,7 @@ export function AsistenciaPage() {
                   >
                     <Avatar nombre={s.nombre} foto={urlArchivo(s.foto_url)} />
                     <div>
-                      <div style={{ fontWeight: 600 }}>{s.nombre}</div>
+                      <div className="font-semibold">{s.nombre}</div>
                       <div className="pequeno muted">
                         {s.folio} · {s.sede}
                         {s.ultima_visita && ` · última visita ${formatoFechaHora(s.ultima_visita)}`}
@@ -195,7 +195,7 @@ export function AsistenciaPage() {
                   <div className="titulo-veredicto">
                     {veredicto.alerta === 'ok' ? '✓ Acceso registrado' : veredicto.alerta === 'aviso' ? '! Registrado con aviso' : '✕ Membresía no vigente'}
                   </div>
-                  <div style={{ fontWeight: 600, fontSize: '1.05rem' }}>{veredicto.socio.nombre}</div>
+                  <div className="font-semibold text-[1.05rem]">{veredicto.socio.nombre}</div>
                   <div className="muted pequeno">
                     {veredicto.socio.folio} · {formatoFechaHora(veredicto.fecha_hora)}
                   </div>
@@ -223,7 +223,7 @@ export function AsistenciaPage() {
             </div>
           )}
 
-          <div className="kpis" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+          <div className="kpis grid-cols-3">
             <Kpi etiqueta="Entradas hoy" valor={d?.total ?? '—'} sub={d ? `${d.socios_unicos} socios distintos` : undefined} />
             <Kpi etiqueta="Por vencer" valor={d?.por_estado.por_vencer ?? '—'} tono="aviso" />
             <Kpi etiqueta="Vencidas" valor={d?.por_estado.vencida ?? '—'} tono="error" icono={<IconoRiesgo />} />

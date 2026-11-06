@@ -65,7 +65,7 @@ export function DatosSocio({ socio, alActualizar }: { socio: SocioDetalle; alAct
           </div>
           <div className="dato"><dt>Alta</dt><dd>{formatoFecha(socio.fecha_alta)}</dd></div>
         </dl>
-        <p className="muted pequeno tarjeta-cuerpo" style={{ paddingTop: 0 }}>
+        <p className="muted pequeno tarjeta-cuerpo pt-0">
           Los datos de contacto se guardan cifrados. Cada consulta de este expediente queda en la bitácora.
         </p>
       </div>

@@ -115,7 +115,7 @@ El proyecto implementa un enfoque de **monorepo modular** desacoplado, con persi
 
 | Capa | Tecnología | Descripción |
 | :--- | :--- | :--- |
-| **Frontend Web (CRM)** | React 19, TypeScript, Vite 8, React Router 7, ESLint | Panel administrativo y de recepción responsivo (escritorio y tablet) |
+| **Frontend Web (CRM)** | React 19, TypeScript, Vite 8, Tailwind CSS 4, React Router 7, ESLint | Panel administrativo y de recepción responsivo (escritorio y tablet) |
 | **Backend API** | Node.js (v20+ / v22+), NestJS 12, TypeScript | REST API modular, inyección de dependencias, OpenAPI / Swagger |
 | **Acceso a datos** | Prisma ORM 7 (`@prisma/adapter-mssql`) y driver oficial `mongodb` | Cliente tipado para SQL Server; el esquema oficial vive en `backend/database/sqlserver/gimnasio_crm.sql` |
 | **Base de Datos Relacional** | SQL Server 2022 (Docker, puerto 1433) | Gestión transaccional ACID: usuarios, socios, membresías, pagos, sedes, fichas de salud, asignación de rutinas y auditoría |
@@ -153,7 +153,7 @@ GymHub/
 │   ├── src/                  # Módulos: common (cifrado, auth, bitácora), auth, socios, planes, membresias, pagos, ficha-salud, mongo, rutinas
 │   └── test/                 # Pruebas unitarias y End-to-End con Vitest y Supertest
 │
-├── frontend/                 # Proyecto Web SPA CRM (React 19 + Vite 8) -> Ver [frontend/README.md](./frontend/README.md)
+├── frontend/                 # Proyecto Web SPA CRM (React 19 + Vite 8 + Tailwind CSS 4) -> Ver [frontend/README.md](./frontend/README.md)
 │   ├── .env.example          # Plantilla de entorno para frontend
 │   ├── .gitignore            # Exclusiones de Git específicas del frontend
 │   ├── eslint.config.js      # Configuración de ESLint (Flat Config)
@@ -213,11 +213,110 @@ git commit -m "fix(APP-RF-11): corrección en solicitud de permisos de Health Co
 * **Node.js**: Versión LTS recomendada (`v20.x` o superior, compatible con `v22.x` y `v24.x`).
 * **npm**: `v10.x` o superior.
 * **Instancias de Base de Datos y Servicios**:
-  * Docker con dos contenedores: SQL Server 2022 (`mssql_container`, puerto 1433) y MongoDB (`mongo_container`, puerto 27017).
-  * Redis (para colas BullMQ y notificaciones; aún no se usa).
+  * Docker con SQL Server 2022 (`mssql_container`, puerto 1433) y MongoDB (`mongo_container`, puerto 27017), siempre encendidos.
+  * Redis (`redis_container`, puerto 6379) para la cola de notificaciones (BullMQ). Es opcional y se levanta solo cuando se necesita.
+  * [ZeroTier](https://www.zerotier.com/) para que el equipo se conecte al backend de desarrollo (ver [Red de desarrollo](#red-de-desarrollo-zerotier)).
 * **Entorno Móvil**:
   * Android Studio Ladybug / Koala o superior con Android SDK API 34+.
   * Dispositivo físico o emulador con Android 8.0 (API 26) o superior.
+
+### Contenedores (Docker Compose)
+
+El `docker-compose.yml` no está en el repositorio porque lleva contraseñas; cada quien lo guarda en su equipo. Este es el que usamos (cambia `<contraseña>` por la tuya):
+
+```yaml
+services:
+  # 1. SQL Server (24/7)
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_container
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=<contraseña>
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+
+  # 2. MongoDB (24/7)
+  mongodb:
+    image: mongo:latest
+    container_name: mongo_container
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=devbyte
+      - MONGO_INITDB_ROOT_PASSWORD=<contraseña>
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # 3. Redis (bajo demanda)
+  redis:
+    image: redis:7.4-alpine
+    container_name: redis_container
+    profiles: ["redis"]        # No arranca con "docker compose up", solo cuando lo pides
+    command:
+      - redis-server
+      - --requirepass
+      - "<contraseña>"
+      - --appendonly
+      - "yes"                  # Persistencia en disco
+      - --maxmemory
+      - 200mb
+      - --maxmemory-policy
+      - noeviction             # BullMQ lo exige: nunca borrar trabajos de la cola
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "<contraseña>", "--no-auth-warning", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  mssql_data:
+  mongo_data:
+  redis_data:
+```
+
+```bash
+docker compose up -d          # SQL Server y MongoDB
+docker compose up -d redis    # Redis, cuando lo necesites
+docker compose stop redis     # detiene Redis (conserva los datos)
+```
+
+### Red de desarrollo (ZeroTier)
+
+El backend de desarrollo corre en el equipo de un integrante y el resto se conecta por ZeroTier. Su IP en la red es **`10.118.55.94`**:
+
+| Servicio | URL |
+| :--- | :--- |
+| API (NestJS) | `http://10.118.55.94:3000` |
+| Swagger | `http://10.118.55.94:3000/docs` |
+| CRM (Vite) | `http://10.118.55.94:5173` |
+
+* Únete a la red de ZeroTier del equipo y pide que te autoricen en *Members* (my.zerotier.com).
+* **Frontend:** pon `VITE_API_URL="http://10.118.55.94:3000"` en `frontend/.env`. Vite escucha en todas las interfaces (`server.host: true`), así que el CRM también se abre desde la IP de ZeroTier.
+* **App Android:** `android/gradle.properties` ya trae `gymhub.apiUrl=http://10.118.55.94:3000/` para la versión debug.
+* **Backend:** `CORS_ORIGIN` debe incluir los orígenes desde los que se abre el CRM, por ejemplo `"http://localhost:5173,http://10.118.55.94:5173"`.
+* Si la IP cambia, fíjala en *Members* de la red de ZeroTier y actualiza estos tres lugares. Windows marca la red de ZeroTier como *Pública*, así que el firewall debe permitir `node.exe` en ese perfil.
 
 ### Variables de Entorno
 
@@ -232,21 +331,20 @@ git commit -m "fix(APP-RF-11): corrección en solicitud de permisos de Health Co
    BLIND_INDEX_PEPPER="<secreto de 16+ caracteres>"  # índices ciegos de correo/teléfono
    SQLSERVER_URL="sqlserver://localhost:1433;database=gimnasio_crm;user=sa;password=<contraseña>;encrypt=true;trustServerCertificate=true"
    MONGODB_URL="mongodb://<usuario>:<contraseña>@localhost:27017/gymhub_rutinas?authSource=admin"   # '#' se escribe %23
-   REDIS_URL="redis://localhost:6379"
-   FIREBASE_PROJECT_ID="gymhub-fcm"
-   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
-   FIREBASE_CLIENT_EMAIL="firebase-adminsdk@gymhub.iam.gserviceaccount.com"
+   CORS_ORIGIN="http://localhost:5173,http://10.118.55.94:5173"
+   REDIS_URL="redis://:<contraseña>@localhost:6379"                       # '#' se escribe %23
+   GOOGLE_APPLICATION_CREDENTIALS="./firebase-service-account.json"      # cuenta de servicio de Firebase
    ```
    La lista completa, con descripciones, está en [`backend/.env.example`](./backend/.env.example) y en el [README del backend](./backend/README.md#variables-de-entorno).
 
    Servicios opcionales (el backend funciona sin ellos):
-   * **Redis** para la cola de notificaciones: `docker run -d --name gymhub-redis -p 6379:6379 -v gymhub-redis:/data redis:7-alpine redis-server --appendonly yes` y `REDIS_URL="redis://localhost:6379"`.
-   * **Firebase** para el push: cuenta de servicio en `FIREBASE_*` (backend) y `google-services.json` en `android/app/` (app). Detalle en el [README del backend](./backend/README.md#notificaciones-push).
+   * **Redis** para la cola de notificaciones: `docker compose up -d redis` (ver [Contenedores](#contenedores-docker-compose)) y `REDIS_URL` con la contraseña. Sin Redis, el backend revisa la tabla `notificacion` cada 15 s.
+   * **Firebase** para el push: el JSON de la cuenta de servicio va en `backend/firebase-service-account.json` y el `google-services.json` en `android/app/`. **Ninguno se sube a Git** (están en los `.gitignore`). Paso a paso en el [README del backend](./backend/README.md#notificaciones-push).
    * **SMTP** (`SMTP_*`) para mandar por correo el código de recuperación de contraseña de la app.
 
 2. **Frontend (`frontend/.env`):**
    ```env
-   VITE_API_URL="http://localhost:3000"
+   VITE_API_URL="http://10.118.55.94:3000"   # backend por ZeroTier (o http://localhost:3000 si corre en tu equipo)
    VITE_MINUTOS_INACTIVIDAD=30       # cierre de sesión por inactividad (CRM-RNF-03)
    VITE_CONGELAMIENTO_MAX_DIAS=90    # igual que CONGELAMIENTO_MAX_DIAS del backend
    ```
@@ -281,11 +379,12 @@ git commit -m "fix(APP-RF-11): corrección en solicitud de permisos de Health Co
    ```
    En Git Bash de Windows antepón `MSYS_NO_PATHCONV=1` a los `docker exec`. No uses `prisma db push`: borraría las tablas que aún no están modeladas en Prisma.
 5. Usuarios del seed (contraseña `GymHub2026!`): `admin@gymhub.dev`, `recepcion@gymhub.dev` y `entrenador@gymhub.dev`. Cámbiala con `npm run usuario:password -- <correo> "<nueva>"`.
+   Para tener datos realistas en el panel y los reportes: `npm run build && npm run semilla:masiva` (500 socios con ~10 meses de historial; `-- --limpiar` los borra). Detalles en [backend/README.md](./backend/README.md#datos-masivos-de-prueba).
 6. Inicia el servidor en modo desarrollo:
    ```bash
    npm run start:dev
    ```
-   El backend estará disponible en `http://localhost:3000`.
+   El backend estará disponible en `http://localhost:3000` y, para el resto del equipo, en `http://10.118.55.94:3000` (ZeroTier).
 
 7. **Pruebas y calidad de código:**
    ```bash
@@ -316,7 +415,7 @@ git commit -m "fix(APP-RF-11): corrección en solicitud de permisos de Health Co
    ```bash
    npm run dev
    ```
-   El frontend estará disponible en `http://localhost:5173`. Inicia sesión con un usuario del seed.
+   El frontend estará disponible en `http://localhost:5173` (y en `http://10.118.55.94:5173` por ZeroTier). Inicia sesión con un usuario del seed.
 
    **Pantallas disponibles:**
    * **Login** con bloqueo por intentos fallidos y cierre automático por inactividad o expiración del token.
@@ -349,10 +448,9 @@ Requisitos: Android Studio (JDK 21 incluido) y un emulador o teléfono con Andro
 
 1. Abre la carpeta `android` en **Android Studio** y sincroniza Gradle.
 2. URL del backend:
-   * **Emulador:** no hay que configurar nada; la versión debug usa `http://10.0.2.2:3000/` (el `localhost` de tu PC).
-   * **Teléfono físico** en la misma red Wi-Fi: agrega `gymhub.apiUrl=http://IP_DE_TU_PC:3000/` a `android/gradle.properties` (o a `~/.gradle/gradle.properties`).
+   * **Debug:** `android/gradle.properties` trae `gymhub.apiUrl=http://10.118.55.94:3000/` (backend por ZeroTier). Funciona en el emulador y en un teléfono con ZeroTier. Si el backend corre en tu propio equipo y usas el emulador, cámbialo a `http://10.0.2.2:3000/` en `~/.gradle/gradle.properties` para no tocar el del repo.
    * **Release:** usa `gymhub.apiUrlProd` (solo HTTPS; el tráfico sin cifrar está bloqueado fuera de debug).
-3. **Notificaciones push (opcional):** descarga `google-services.json` de la consola de Firebase y colócalo en `android/app/`. Si no existe, la app compila igual y las push quedan desactivadas.
+3. **Notificaciones push:** descarga `google-services.json` de la consola de Firebase (proyecto `gymhub-1e93b`, app Android `com.example.gymhub`) y colócalo en `android/app/`, al nivel de `build.gradle.kts`. Luego **Sync Project with Gradle Files**. Si no existe, la app compila igual y las push quedan desactivadas. No uses el asistente *Tools > Firebase* de Android Studio: modifica los archivos de Gradle.
 4. Compila, instala y prueba:
    ```bash
    cd android
@@ -584,6 +682,7 @@ En total: 124 pruebas unitarias en el backend (Vitest) y 20 en Android (JUnit + 
 ### Pendientes
 * Convertir los recorridos manuales en pruebas e2e con Supertest y llevar la cobertura total de `src/` al 80%.
 * Probar las pantallas nuevas en el navegador con usuarios reales de cada rol y en una tableta.
+* Probar un push real en un teléfono (Firebase y Redis ya están configurados en el equipo de desarrollo).
 * Configurar en el equipo de producción: `google-services.json` y la cuenta de servicio de Firebase, un servidor SMTP, Redis y la tarea diaria de respaldo.
 * Pruebas de interfaz de la app en un emulador.
 
@@ -641,7 +740,7 @@ A partir del análisis exhaustivo del estado actual del repositorio frente a la 
 | Google Health Connect | `APP-RF-11`, `APP-RF-12` | ✅ Permisos de lectura revocables, consentimiento en GymHub y sincronización con WorkManager. |
 | Credencial digital con QR | `APP-RF-05` | ✅ ZXing (`com.google.zxing:core`). |
 | Registro de sesión y modo offline | `APP-RF-06`, `07`, `APP-RNF-09` | ✅ Caché y cola cifradas (ver decisiones); idempotencia por `uuid_cliente`. |
-| Firebase Cloud Messaging | `APP-RF-13`, `14` | ✅ Servicio, canales por categoría, bandeja, preferencias y acuse de entrega. Solo falta poner el `google-services.json` del proyecto de Firebase. |
+| Firebase Cloud Messaging | `APP-RF-13`, `14` | ✅ Servicio, canales por categoría, bandeja, preferencias y acuse de entrega. Proyecto de Firebase `gymhub-1e93b` configurado; falta probar un push real en un teléfono. |
 
 ---
 

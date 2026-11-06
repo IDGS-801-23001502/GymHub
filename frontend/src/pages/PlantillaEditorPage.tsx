@@ -67,11 +67,11 @@ function Formulario({ plantilla, catalogo }: { plantilla: Plantilla | null; cata
 
   return (
     <>
-      <div className="pequeno" style={{ marginBottom: 12 }}>
+      <div className="pequeno mb-3">
         <Link to="/plantillas">← Plantillas</Link>
       </div>
       <form className="espaciado" onSubmit={guardar} noValidate>
-        <div className="encabezado" style={{ marginBottom: 0 }}>
+        <div className="encabezado mb-0">
           <div>
             <h1>{plantilla ? `Editar ${plantilla.nombre}` : 'Nueva plantilla'}</h1>
             {plantilla && <p>Los cambios aplican a asignaciones nuevas; las rutinas ya asignadas conservan su versión.</p>}

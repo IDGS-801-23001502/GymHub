@@ -73,7 +73,7 @@ export function MembresiasTab({
     <div className="espaciado">
       {resultado && (
         <Alerta tipo="ok">
-          <div className="fila" style={{ justifyContent: 'space-between' }}>
+          <div className="fila justify-between">
             <span>
               {resultado.es_renovacion ? 'Renovación' : 'Membresía'} <strong>{resultado.plan.nombre}</strong> registrada:
               del {formatoFecha(resultado.fecha_inicio)} al {formatoFecha(resultado.fecha_vencimiento)}
@@ -128,13 +128,12 @@ export function MembresiasTab({
                           {m.plan.duracion_dias} días{m.es_renovacion ? ' · renovación' : ''}
                         </div>
                         {m.congelamientos.map((c) => (
-                          <div key={c.id_congelamiento} className="pequeno" style={{ color: 'var(--info)' }}>
+                          <div key={c.id_congelamiento} className="pequeno text-info">
                             Congelada {formatoFecha(c.fecha_inicio)} – {formatoFecha(c.fecha_fin)} (+{c.dias_extendidos} días)
                             {c.motivo ? ` · ${c.motivo}` : ''}
                             {operar && c.fecha_fin >= hoyISO() && (
                               <button
-                                className="btn btn-sm btn-texto"
-                                style={{ minHeight: 0, padding: '0 6px' }}
+                                className="btn btn-sm btn-texto min-h-0 py-0 px-1.5"
                                 onClick={() => void terminarCongelamiento(c.id_congelamiento, c.fecha_inicio >= hoyISO())}
                               >
                                 {c.fecha_inicio >= hoyISO() ? 'Anular' : 'Terminar hoy'}
@@ -153,14 +152,14 @@ export function MembresiasTab({
                         {m.pagos.map((p) => (
                           <div key={p.id_pago} className="pequeno">
                             {operar ? (
-                              <button className="btn-texto btn btn-sm" style={{ padding: 0, minHeight: 0 }} onClick={() => comprobante(p.id_pago)}>
+                              <button className="btn-texto btn btn-sm p-0 min-h-0" onClick={() => comprobante(p.id_pago)}>
                                 {p.folio}
                               </button>
                             ) : (
                               <span className="mono">{p.folio}</span>
                             )}{' '}
                             {formatoMoneda(p.monto)} · {METODOS_PAGO[p.metodo]}
-                            {p.estado === 'cancelado' && <span className="badge badge-neutro" style={{ marginLeft: 6 }}>Cancelado</span>}
+                            {p.estado === 'cancelado' && <span className="badge badge-neutro ml-1.5">Cancelado</span>}
                           </div>
                         ))}
                       </td>

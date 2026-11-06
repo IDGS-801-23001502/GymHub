@@ -84,7 +84,7 @@ export function RiesgoPage() {
         </div>
       )}
 
-      <div className="filtros" style={{ margin: 0 }}>
+      <div className="filtros m-0">
         <div className="chips" role="group" aria-label="Estado">
           {(['pendientes', 'resuelto', 'descartado'] as const).map((f) => (
             <button key={f} className="chip" aria-pressed={filtro === f} onClick={() => setFiltro(f)}>
@@ -92,7 +92,7 @@ export function RiesgoPage() {
             </button>
           ))}
         </div>
-        <select aria-label="Motivo" value={motivo} onChange={(e) => setMotivo(e.target.value as typeof motivo)} style={{ width: 220 }}>
+        <select aria-label="Motivo" value={motivo} onChange={(e) => setMotivo(e.target.value as typeof motivo)} className="w-55">
           <option value="">Todos los motivos</option>
           <option value="inactividad">Inactividad</option>
           <option value="membresia_por_vencer">Membresía por vencer</option>
@@ -108,9 +108,9 @@ export function RiesgoPage() {
         <div className="rejilla rejilla-2">
           {lista.map((r) => (
             <div key={r.id_riesgo} className="riesgo-item">
-              <div className="fila" style={{ justifyContent: 'space-between' }}>
+              <div className="fila justify-between">
                 <div>
-                  <Link to={`/socios/${r.socio.id_socio}`} style={{ fontWeight: 700 }}>
+                  <Link to={`/socios/${r.socio.id_socio}`} className="font-bold">
                     {r.socio.nombre}
                   </Link>
                   <div className="pequeno muted">
@@ -125,7 +125,7 @@ export function RiesgoPage() {
               </div>
               {r.detalle && <p className="pequeno">{r.detalle}</p>}
               {r.acciones.length > 0 && (
-                <ul className="linea pequeno" style={{ marginTop: 4 }}>
+                <ul className="linea pequeno mt-1">
                   {r.acciones.slice(0, 3).map((a) => (
                     <li key={a.id_accion}>
                       <div>
@@ -137,7 +137,7 @@ export function RiesgoPage() {
                 </ul>
               )}
               {puede('recepcionista') && (r.estado === 'abierto' || r.estado === 'atendido') && (
-                <div className="fila" style={{ justifyContent: 'flex-end' }}>
+                <div className="fila justify-end">
                   <button className="btn btn-sm btn-primario" onClick={() => setAtendiendo(r)}>
                     Registrar acción
                   </button>
@@ -267,7 +267,7 @@ function ModalConfig({ alCerrar }: { alCerrar: () => void }) {
               <tbody>
                 {[{ id_sede: null as number | null, nombre: 'General (todas las sedes)', personalizada: true, ...datos.global }, ...datos.sedes].map((c) => (
                   <tr key={c.id_sede ?? 'g'}>
-                    <td style={{ fontWeight: c.id_sede === null ? 700 : 400 }}>{c.nombre}</td>
+                    <td className={c.id_sede === null ? 'font-bold' : 'font-normal'}>{c.nombre}</td>
                     {c.personalizada ? (
                       <>
                         <td className="num">{c.dias_inactividad}</td>
@@ -339,7 +339,7 @@ function ModalConfig({ alCerrar }: { alCerrar: () => void }) {
                 />
                 Detección activa
               </label>
-              <div className="fila" style={{ justifyContent: 'flex-end' }}>
+              <div className="fila justify-end">
                 <button className="btn" onClick={() => setEditando(null)}>
                   Cancelar
                 </button>

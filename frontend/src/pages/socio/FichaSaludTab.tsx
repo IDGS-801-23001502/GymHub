@@ -118,7 +118,7 @@ export function FichaSaludTab({ idSocio }: { idSocio: number }) {
                   <tr key={v.id_ficha}>
                     <td>
                       v{v.version}
-                      {v.borrador && <span className="badge badge-aviso" style={{ marginLeft: 8 }}>Borrador</span>}
+                      {v.borrador && <span className="badge badge-aviso ml-2">Borrador</span>}
                     </td>
                     <td>{formatoFechaHora(v.creado_en)}</td>
                     <td>{v.actualizado_por?.nombre ?? 'App del socio'}</td>
@@ -282,7 +282,7 @@ function FormularioFicha({
         </Campo>
       </div>
       <div className="campo">
-        <span className="pequeno" style={{ fontWeight: 600 }}>Restricciones para rutinas</span>
+        <span className="pequeno font-semibold">Restricciones para rutinas</span>
         <div className="chips" role="group" aria-label="Restricciones para rutinas">
           {Object.entries(RESTRICCIONES).map(([k, v]) => (
             <button type="button" key={k} className="chip" aria-pressed={estandar.includes(k)} onClick={() => alternar(k)}>{v}</button>
@@ -303,7 +303,7 @@ function FormularioFicha({
         <input type="checkbox" checked={borrador} onChange={(e) => setBorrador(e.target.checked)} />
         Guardar como borrador (pendiente de revisión)
       </label>
-      <div className="fila" style={{ justifyContent: 'flex-end' }}>
+      <div className="fila justify-end">
         {alCancelar && <button type="button" className="btn" onClick={alCancelar}>Cancelar</button>}
         <button type="submit" className="btn btn-primario" disabled={enviando}>
           {enviando ? 'Guardando…' : 'Guardar ficha'}

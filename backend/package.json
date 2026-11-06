@@ -24,6 +24,7 @@
     "prisma:generate": "prisma generate",
     "token:dev": "node scripts/token-dev.mjs",
     "claves:rotar": "node dist/cli/rotar-claves.js",
+    "semilla:masiva": "node dist/cli/semilla-masiva.js",
     "respaldo": "node scripts/respaldo.mjs",
     "postinstall": "prisma generate",
     "prebuild": "prisma generate",

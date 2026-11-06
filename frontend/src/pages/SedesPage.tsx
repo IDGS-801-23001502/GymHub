@@ -28,10 +28,10 @@ export function SedesPage() {
       ) : (
         <div className="rejilla rejilla-2">
           {datos?.map((s) => (
-            <div key={s.id_sede} className="tarjeta tarjeta-cuerpo espaciado" style={{ gap: 12, opacity: s.activa ? 1 : 0.6 }}>
-              <div className="fila" style={{ justifyContent: 'space-between' }}>
+            <div key={s.id_sede} className={`tarjeta tarjeta-cuerpo espaciado gap-3 ${s.activa ? '' : 'opacity-60'}`}>
+              <div className="fila justify-between">
                 <div className="persona">
-                  <div className="kpi-icono" style={{ position: 'static' }}>
+                  <div className="kpi-icono static">
                     <IconoSedes />
                   </div>
                   <div>
@@ -53,7 +53,7 @@ export function SedesPage() {
               <div className="pequeno">
                 {s.horarios.length ? (
                   s.horarios.map((h) => (
-                    <div key={h.dia_semana} className="fila" style={{ justifyContent: 'space-between' }}>
+                    <div key={h.dia_semana} className="fila justify-between">
                       <span className="muted">{DIAS[h.dia_semana - 1]}</span>
                       <span className="mono">
                         {h.hora_apertura}–{h.hora_cierre}
@@ -64,7 +64,7 @@ export function SedesPage() {
                   <span className="muted">Sin horario registrado</span>
                 )}
               </div>
-              <div className="fila" style={{ justifyContent: 'flex-end' }}>
+              <div className="fila justify-end">
                 <button className="btn btn-sm" onClick={() => setEditando(s)}>
                   Editar
                 </button>
@@ -140,13 +140,13 @@ function EditorSede({ sede, alCerrar, alGuardar }: { sede: SedeAdmin | null; alC
       <Campo etiqueta="Teléfono">{(p) => <input {...p} inputMode="numeric" maxLength={10} value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))} />}</Campo>
       <div className="campo">
         <label>Horario</label>
-        <div className="espaciado" style={{ gap: 6 }}>
+        <div className="espaciado gap-1.5">
           {DIAS.map((nombreDia, i) => {
             const d = i + 1;
             const h = deDia(d);
             return (
               <div key={d} className="horario">
-                <label className="casilla" style={{ alignItems: 'center' }}>
+                <label className="casilla items-center">
                   <input
                     type="checkbox"
                     checked={!!h}
@@ -166,7 +166,7 @@ function EditorSede({ sede, alCerrar, alGuardar }: { sede: SedeAdmin | null; alC
                     <input type="time" aria-label={`Cierre ${nombreDia}`} value={h.hora_cierre} onChange={(e) => cambiar(d, 'hora_cierre', e.target.value)} />
                   </>
                 ) : (
-                  <span className="muted pequeno" style={{ gridColumn: 'span 2' }}>
+                  <span className="muted pequeno col-span-2">
                     Cerrado
                   </span>
                 )}

@@ -4,18 +4,26 @@
 const ISO_DIA = /^\d{4}-\d{2}-\d{2}$/;
 const MS_DIA = 86_400_000;
 
+// Crear un Intl.DateTimeFormat es caro (milisegundos); en reportes se formatean
+// decenas de miles de fechas, así que se reutiliza uno por zona y opciones.
+const formateadores = new Map<string, Intl.DateTimeFormat>();
+export function formateador(locale: string, opciones: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const llave = `${locale}|${JSON.stringify(opciones)}`;
+  let f = formateadores.get(llave);
+  if (!f) {
+    f = new Intl.DateTimeFormat(locale, opciones);
+    formateadores.set(llave, f);
+  }
+  return f;
+}
+
 /** Fecha de hoy en la zona horaria del gimnasio (APP_TIMEZONE). */
 export function hoyISO(
   zona = process.env.APP_TIMEZONE ?? 'America/Mexico_City',
   ahora = new Date(),
 ): string {
   // en-CA formatea como YYYY-MM-DD
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: zona,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(ahora);
+  return formateador('en-CA', { timeZone: zona, year: 'numeric', month: '2-digit', day: '2-digit' }).format(ahora);
 }
 
 export function esFechaISO(valor: string): boolean {

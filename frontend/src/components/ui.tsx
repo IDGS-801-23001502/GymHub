@@ -150,7 +150,7 @@ export function Paginacion({
   const desde = (pagina - 1) * porPagina + 1;
   const hasta = Math.min(pagina * porPagina, total);
   return (
-    <div className="fila" style={{ justifyContent: 'space-between', padding: '12px 16px' }}>
+    <div className="fila justify-between py-3 px-4">
       <span className="muted pequeno">
         {desde}–{hasta} de {total}
       </span>

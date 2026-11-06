@@ -138,7 +138,7 @@ export function SociosPage() {
                       <th>Estado</th>
                     </tr>
                   </thead>
-                  <tbody style={{ opacity: cargando ? 0.6 : 1 }}>
+                  <tbody className={cargando ? 'opacity-60' : undefined}>
                     {datos.datos.map((s) => (
                       <tr
                         key={s.id_socio}

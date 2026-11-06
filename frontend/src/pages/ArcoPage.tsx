@@ -52,7 +52,7 @@ export function ArcoPage() {
           <h1>Derechos ARCO</h1>
           <p>Acceso, rectificación, cancelación y oposición. Se registran desde el expediente del socio; el administrador las resuelve.</p>
         </div>
-        <select aria-label="Estado" value={estado} onChange={(e) => setEstado(e.target.value)} style={{ width: 200 }}>
+        <select aria-label="Estado" value={estado} onChange={(e) => setEstado(e.target.value)} className="w-50">
           <option value="">Todas</option>
           {Object.entries(ESTADOS_ARCO).map(([k, v]) => (
             <option key={k} value={k}>
@@ -89,7 +89,7 @@ export function ArcoPage() {
                       <div className="pequeno muted">{s.socio.folio}</div>
                     </td>
                     <td>{TIPOS_ARCO[s.tipo]}</td>
-                    <td className="pequeno" style={{ maxWidth: 280 }}>
+                    <td className="pequeno max-w-70">
                       {s.descripcion ?? '—'}
                     </td>
                     <td>
@@ -99,14 +99,14 @@ export function ArcoPage() {
                     <td className="pequeno">{formatoFechaHora(s.creada_en)}</td>
                     <td>
                       {esAdmin && (
-                        <div className="fila" style={{ flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                        <div className="fila flex-nowrap justify-end">
                           {s.tipo === 'acceso' && (
                             <button className="btn btn-sm" onClick={() => void exportar(s)} title="Descarga todos los datos del socio">
                               <IconoDescargar /> Datos
                             </button>
                           )}
                           {(s.estado === 'recibida' || s.estado === 'en_proceso') && (
-                            <select aria-label="Cambiar estado" value="" onChange={(e) => e.target.value && void cambiar(s, e.target.value)} style={{ width: 150, minHeight: 32 }}>
+                            <select aria-label="Cambiar estado" value="" onChange={(e) => e.target.value && void cambiar(s, e.target.value)} className="w-37.5 min-h-8">
                               <option value="">Resolver…</option>
                               {s.estado === 'recibida' && <option value="en_proceso">En proceso</option>}
                               <option value="atendida">Atendida</option>

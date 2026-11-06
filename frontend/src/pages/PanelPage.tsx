@@ -38,7 +38,7 @@ export function PanelPage() {
           <h1>Hola, {usuario?.nombre.split(' ')[0]} 👋</h1>
           <p>Así va el gimnasio {datos ? `del ${formatoFecha(datos.desde)} al ${formatoFecha(datos.hasta)}` : ''}.</p>
         </div>
-        <div className="filtros" style={{ margin: 0 }}>
+        <div className="filtros m-0">
           <div className="chips" role="group" aria-label="Periodo">
             {(Object.keys(PERIODOS) as (keyof typeof PERIODOS)[]).map((p) => (
               <button key={p} className="chip" aria-pressed={periodo === p} onClick={() => setPeriodo(p)}>
@@ -47,7 +47,7 @@ export function PanelPage() {
             ))}
           </div>
           {(usuario?.sedes.length ?? 0) > 1 && (
-            <select aria-label="Sede" value={idSede} onChange={(e) => setIdSede(e.target.value ? Number(e.target.value) : '')} style={{ width: 180 }}>
+            <select aria-label="Sede" value={idSede} onChange={(e) => setIdSede(e.target.value ? Number(e.target.value) : '')} className="w-45">
               <option value="">Todas las sedes</option>
               {usuario?.sedes.map((s) => (
                 <option key={s.id_sede} value={s.id_sede}>
@@ -64,17 +64,17 @@ export function PanelPage() {
       {i && datos && (
         <>
           <div className="tarjeta tarjeta-degradado tarjeta-cuerpo">
-            <div className="fila" style={{ justifyContent: 'space-between' }}>
+            <div className="fila justify-between">
               <div>
                 <div className="muted pequeno">SOCIOS ACTIVOS</div>
-                <div style={{ fontSize: '2.6rem', fontWeight: 800, lineHeight: 1.1 }}>{i.socios_activos}</div>
+                <div className="text-[2.6rem] font-extrabold leading-[1.1]">{i.socios_activos}</div>
                 <div className="muted pequeno">
                   +{i.altas} altas · −{i.bajas} bajas en el periodo
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div className="text-right">
                 <div className="muted pequeno">INGRESOS DEL PERIODO</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{formatoMoneda(i.ingresos)}</div>
+                <div className="text-[1.8rem] font-extrabold">{formatoMoneda(i.ingresos)}</div>
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export function PanelPage() {
                   <tbody>
                     {datos.por_sede.map((s) => (
                       <tr key={s.id_sede}>
-                        <td style={{ fontWeight: 600 }}>{s.nombre}</td>
+                        <td className="font-semibold">{s.nombre}</td>
                         <td className="num">{s.socios_activos}</td>
                         <td className="num">{s.asistencia_hoy}</td>
                         <td className="num">{s.visitas_periodo}</td>

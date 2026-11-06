@@ -67,7 +67,7 @@ function Rutina({ socio, editable }: { socio: Socio; editable: boolean }) {
     <>
       {mensaje && <Alerta tipo="ok">{mensaje}</Alerta>}
       <div className="tarjeta tarjeta-cuerpo espaciado">
-        <div className="fila" style={{ justifyContent: 'space-between' }}>
+        <div className="fila justify-between">
           <h2>Rutina vigente</h2>
           {editable && socio.estado === 'activo' && (
             <div className="fila">
@@ -263,8 +263,8 @@ function AsignarModal({ socio, reemplaza, alCerrar, alGuardar }: { socio: Socio;
                 {sugerencias.datos?.plantillas.length === 0 && <p className="vacio">No hay plantillas activas.</p>}
                 <div className="espaciado">
                   {sugerencias.datos?.plantillas.map((s) => (
-                    <button key={s.id} type="button" className="bloque" style={{ textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit' }} onClick={() => elegir(s)}>
-                      <div className="fila" style={{ justifyContent: 'space-between' }}>
+                    <button key={s.id} type="button" className="bloque text-left cursor-pointer [font:inherit] text-inherit" onClick={() => elegir(s)}>
+                      <div className="fila justify-between">
                         <strong>{s.nombre}</strong>
                         <div className="chips">
                           {s.coincide_objetivo && <span className="badge badge-info">Coincide con su objetivo</span>}
@@ -481,11 +481,11 @@ function VersionesModal({ idRutina, alCerrar }: { idRutina: number; alCerrar: ()
             <>
               <div className="fila">
                 <span className="pequeno">Comparar</span>
-                <select aria-label="Versión izquierda" value={izquierda} onChange={(e) => setA(Number(e.target.value))} style={{ width: 'auto' }}>
+                <select aria-label="Versión izquierda" value={izquierda} onChange={(e) => setA(Number(e.target.value))} className="w-auto">
                   {lista.map((v) => <option key={v.numero_version} value={v.numero_version}>Versión {v.numero_version}</option>)}
                 </select>
                 <span className="pequeno">con</span>
-                <select aria-label="Versión derecha" value={derecha} onChange={(e) => setB(Number(e.target.value))} style={{ width: 'auto' }}>
+                <select aria-label="Versión derecha" value={derecha} onChange={(e) => setB(Number(e.target.value))} className="w-auto">
                   {lista.map((v) => <option key={v.numero_version} value={v.numero_version}>Versión {v.numero_version}</option>)}
                 </select>
               </div>
@@ -509,7 +509,7 @@ function ContenidoVersion({ idRutina, numero, otros }: { idRutina: number; numer
       {datos.bloques.map((bl, i) => (
         <section key={i} className="bloque">
           <strong className="pequeno">{i + 1}. {bl.tipo}</strong>
-          <ul className="pequeno" style={{ margin: 0, paddingLeft: 18 }}>
+          <ul className="pequeno m-0 list-disc pl-4.5">
             {bl.ejercicios.map((e, j) => {
               const firma = `${e.id_ejercicio}|${e.series}|${e.repeticiones}|${e.descanso_seg}`;
               return (
@@ -559,7 +559,7 @@ function SeguimientoVista({ idSocio }: { idSocio: number }) {
           <label htmlFor="seg-hasta">Hasta</label>
           <input id="seg-hasta" type="date" value={hasta} min={desde} max={hoyISO()} onChange={(e) => setHasta(e.target.value)} />
         </div>
-        <div className="chips" style={{ alignSelf: 'end' }}>
+        <div className="chips self-end">
           {[7, 30, 90].map((d) => (
             <button key={d} className="chip" onClick={() => { setHasta(hoyISO()); setDesde(sumarDias(hoyISO(), -(d - 1))); }}>
               {d} días
@@ -599,7 +599,7 @@ function SeguimientoVista({ idSocio }: { idSocio: number }) {
                   <thead>
                     <tr><th>Fecha</th><th className="num">Duración</th><th>Estado</th><th className="num">FC prom./máx.</th><th className="num">kcal</th><th>Ejercicios</th></tr>
                   </thead>
-                  <tbody style={{ opacity: cargando ? 0.6 : 1 }}>
+                  <tbody className={cargando ? 'opacity-60' : undefined}>
                     {datos.sesiones.map((s) => (
                       <tr key={s.id_sesion}>
                         <td>{formatoFechaHora(s.fecha_inicio)}{s.numero_version ? <div className="muted pequeno">versión {s.numero_version}</div> : null}</td>

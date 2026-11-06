@@ -199,7 +199,7 @@ export function ReportesPage() {
                 <tbody>
                   {r.por_mes.map((m) => (
                     <tr key={m.mes}>
-                      <td style={{ textTransform: 'capitalize' }}>{nombreMes(m.mes)}</td>
+                      <td className="capitalize">{nombreMes(m.mes)}</td>
                       <td className="num">{m.visitas}</td>
                       <td className="num">{formatoMoneda(m.ingresos)}</td>
                       <td className="num">{m.altas_membresia}</td>

@@ -68,14 +68,14 @@ export function SegmentosPage() {
       ) : (
         <div className="rejilla rejilla-2">
           {datos.map((s) => (
-            <div key={s.id_segmento} className="tarjeta tarjeta-cuerpo espaciado" style={{ gap: 10 }}>
-              <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div key={s.id_segmento} className="tarjeta tarjeta-cuerpo espaciado gap-2.5">
+              <div className="fila justify-between items-start">
                 <div>
                   <h3>{s.nombre}</h3>
                   {s.descripcion && <p className="muted pequeno">{s.descripcion}</p>}
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{s.total}</div>
+                <div className="text-right">
+                  <div className="text-[1.8rem] font-extrabold leading-none">{s.total}</div>
                   <div className="pequeno muted">socios</div>
                 </div>
               </div>
@@ -83,7 +83,7 @@ export function SegmentosPage() {
               <p className="pequeno muted">
                 Creado por {s.creado_por} · {s.campanas} campañas
               </p>
-              <div className="fila" style={{ justifyContent: 'flex-end' }}>
+              <div className="fila justify-end">
                 <button className="btn btn-sm btn-texto btn-peligro" onClick={() => void eliminar(s)} disabled={s.campanas > 0} title={s.campanas ? 'Tiene campañas' : undefined}>
                   Eliminar
                 </button>
@@ -120,7 +120,7 @@ export function SegmentosPage() {
 function TablaSocios({ socios }: { socios: SocioDeSegmento[] }) {
   if (!socios.length) return <div className="vacio">Ningún socio cumple los filtros.</div>;
   return (
-    <div className="tabla-envoltura" style={{ maxHeight: 360 }}>
+    <div className="tabla-envoltura max-h-90">
       <table>
         <thead>
           <tr>
@@ -214,7 +214,7 @@ function EditorSegmento({ segmento, alCerrar, alGuardar }: { segmento: Segmento 
   const rango = (etiqueta: string, min: keyof FiltrosSegmento, max: keyof FiltrosSegmento, ayuda?: string) => (
     <div className="campo">
       <label>{etiqueta}</label>
-      <div className="fila" style={{ flexWrap: 'nowrap' }}>
+      <div className="fila flex-nowrap">
         <input type="number" min={0} placeholder="mín" aria-label={`${etiqueta} mínimo`} value={(f[min] as number | undefined) ?? ''} onChange={(e) => setF({ ...f, [min]: num(e.target.value) })} />
         <span className="muted">a</span>
         <input type="number" min={0} placeholder="máx" aria-label={`${etiqueta} máximo`} value={(f[max] as number | undefined) ?? ''} onChange={(e) => setF({ ...f, [max]: num(e.target.value) })} />
@@ -230,7 +230,7 @@ function EditorSegmento({ segmento, alCerrar, alGuardar }: { segmento: Segmento 
       ancho
       pie={
         <>
-          <span className="muted pequeno" style={{ marginRight: 'auto' }}>
+          <span className="muted pequeno mr-auto">
             {vista ? `${vista.total} socios cumplen los filtros` : 'Calculando…'}
           </span>
           <button className="btn" onClick={alCerrar}>

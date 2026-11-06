@@ -18,6 +18,7 @@
 - [Módulos: Asistencia, Retención, Analítica y Administración (API)](#módulos-asistencia-retención-analítica-y-administración-api)
 - [Notificaciones push](#notificaciones-push)
 - [Respaldos y restauración](#respaldos-y-restauración)
+- [Datos masivos de prueba](#datos-masivos-de-prueba)
 - [Comandos Disponibles](#comandos-disponibles)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Pruebas y Calidad](#pruebas-y-calidad)
@@ -62,6 +63,7 @@ El backend de **GymHub** está desarrollado sobre **NestJS 12** con módulos ECM
    * **Transacciones:** asignar membresía y registrar pago, y asignar o versionar una rutina, ocurren en una transacción `SERIALIZABLE` (`CRM-RNF-07`).
    * **Bitácora:** es de solo inserción; un trigger rechaza `UPDATE` y `DELETE` sobre `bitacora_auditoria`.
    * **`seed_dev.sql`:** sedes, usuarios (contraseña `GymHub2026!`), aviso de privacidad y planes de prueba. **Solo para desarrollo.**
+   * **Datos masivos:** después del seed, `npm run build && npm run semilla:masiva` llena el CRM con cientos de socios e historial (ver [Datos masivos de prueba](#datos-masivos-de-prueba)).
 
 2. **MongoDB (documental, Docker en el puerto 27017, base `gymhub_rutinas`):**
    * **Script:** [`database/mongodb/gymhub_rutinas.js`](./database/mongodb/gymhub_rutinas.js). Es idempotente: crea las colecciones con validadores `$jsonSchema`, los índices (con intercalación en español) y un catálogo base de 16 ejercicios.
@@ -75,7 +77,7 @@ El backend de **GymHub** está desarrollado sobre **NestJS 12** con módulos ECM
 
 * **Node.js** `>= 20.x` (probado con 24.x) y **npm** `v10.x` o superior.
 * **Docker** con SQL Server 2022 (`mssql_container`) y MongoDB (`mongo_container`), con los scripts de `database/` aplicados.
-* **Redis**, solo para notificaciones (pendiente).
+* **Redis** (`redis_container`), opcional, para la cola de notificaciones. Se levanta con `docker compose up -d redis` (el compose está en el [README principal](../README.md#contenedores-docker-compose)).
 
 ---
 
@@ -101,8 +103,11 @@ cp .env.example .env
 | `BLIND_INDEX_PEPPER` | ✅ | Pepper de los índices ciegos (mín. 16 caracteres). **No se puede cambiar** sin recalcular `correo_hash` y `telefono_hash`. |
 | `APP_TIMEZONE` | | Zona horaria del gimnasio para calcular vigencias (por defecto `America/Mexico_City`). |
 | `CONGELAMIENTO_MAX_DIAS` | | Máximo de días congelados por membresía (por defecto 90). |
-| `CORS_ORIGIN` | | Orígenes permitidos, separados por coma. |
-| `PORT` | | Puerto HTTP (por defecto 3000). |
+| `CORS_ORIGIN` | | Orígenes permitidos, separados por coma. En desarrollo: `"http://localhost:5173,http://10.118.55.94:5173"` (local y ZeroTier). |
+| `PORT` | | Puerto HTTP (por defecto 3000). El servidor escucha en todas las interfaces, así que también responde en la IP de ZeroTier. |
+| `REDIS_URL` | | `redis://:<contraseña>@localhost:6379`. Activa la cola BullMQ; sin ella se sondea la tabla `notificacion`. Los caracteres especiales van codificados (`#` → `%23`). |
+| `GOOGLE_APPLICATION_CREDENTIALS` | | Ruta al JSON de la cuenta de servicio de Firebase: `"./firebase-service-account.json"`. |
+| `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | | Alternativa al JSON: los campos de la cuenta de servicio en variables (`private_key` con los saltos de línea como `\n`). Si están las tres, tienen prioridad. |
 
 > ⚠️ Si se pierde `ENCRYPTION_KEY` o `BLIND_INDEX_PEPPER`, los datos cifrados no se pueden recuperar. Guárdalos en un gestor de secretos.
 
@@ -340,12 +345,18 @@ La documentación interactiva de todos los endpoints está en `http://localhost:
 
 ## Notificaciones push
 
-1. **Firebase:** en la consola de Firebase crea el proyecto, agrega la app Android con el paquete `com.example.gymhub` y descarga `google-services.json` a `android/app/`. En *Configuración del proyecto > Cuentas de servicio* genera una clave privada y copia `project_id`, `client_email` y `private_key` a `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` y `FIREBASE_PRIVATE_KEY` (con los saltos de línea como `\n`). También sirve `GOOGLE_APPLICATION_CREDENTIALS` con la ruta del JSON.
-2. **Redis (opcional):**
-   ```bash
-   docker run -d --name gymhub-redis -p 6379:6379 -v gymhub-redis:/data redis:7-alpine redis-server --appendonly yes
-   ```
-   y `REDIS_URL="redis://localhost:6379"`. Sin Redis, el backend revisa la tabla `notificacion` cada 15 segundos.
+1. **Firebase** (proyecto `gymhub-1e93b`, plan gratuito Spark). Todo se hace en la web, https://console.firebase.google.com:
+   1. **Crear el proyecto** (Google Analytics no hace falta).
+   2. **App Android:** en la página principal del proyecto da clic en el ícono de Android (o en ⚙️ *Configuración del proyecto > General > Tus apps > Agregar app*). Paquete: **`com.example.gymhub`**, que debe coincidir con el `applicationId`. Descarga `google-services.json` a `android/app/` y salta los pasos de "agregar el SDK" (ya está en el proyecto).
+   3. **Cuenta de servicio:** en ⚙️ *Configuración del proyecto > Cuentas de servicio > Firebase Admin SDK > Generar nueva clave privada*. Guarda el JSON como **`backend/firebase-service-account.json`** y pon `GOOGLE_APPLICATION_CREDENTIALS="./firebase-service-account.json"` en `.env`. La ruta es relativa a la carpeta `backend/`, desde donde se arranca el servidor.
+   4. En *Cloud Messaging* confirma que **Firebase Cloud Messaging API (V1)** está habilitada.
+
+   > ⚠️ El JSON de la cuenta de servicio permite mandar notificaciones a nombre del proyecto. **Nunca lo subas a Git** ni lo dejes dentro de `android/`; los `.gitignore` ya ignoran `firebase-service-account.json` y `*firebase-adminsdk*.json`.
+
+   Al arrancar, si falta la configuración, el log muestra *"Firebase sin configurar"* y las notificaciones solo llegan a la bandeja de la app.
+2. **Redis (opcional):** `docker compose up -d redis` y `REDIS_URL="redis://:<contraseña>@localhost:6379"`. Al arrancar, el log debe decir `Cola de notificaciones: Redis (BullMQ)`. Sin Redis, el backend revisa la tabla `notificacion` cada 15 segundos.
+
+   BullMQ 6 ya no trae `ioredis`, y en ESM exige clientes ya construidos. Por eso `ioredis` es una dependencia directa y `NotificacionesService` crea una conexión para la cola y otra para el worker, y las cierra en `onModuleDestroy`.
 3. **Flujo:** campañas, recordatorios de riesgo y cambios de rutina crean filas en `notificacion` (`pendiente`). La cola las envía con `sendEachForMulticast`; los tokens inválidos se desactivan, los errores temporales se reintentan hasta 5 veces y luego quedan `fallido`. La app marca `entregado` al recibir el push y `leida` al abrirlo.
 
 ---
@@ -397,6 +408,28 @@ Contraseña: mínimo 10 caracteres con mayúscula, minúscula, número y símbol
 
 ---
 
+## Datos masivos de prueba
+
+`npm run semilla:masiva` (requiere `npm run build` y haber aplicado `seed_dev.sql`) simula la operación del gimnasio desde el 5 de enero hasta hoy, usando las mismas reglas que el backend, para que el panel, los reportes, el riesgo y las campañas tengan datos realistas. **Solo para desarrollo.** Saca antes un `npm run respaldo`.
+
+| Qué genera | Detalle (500 socios, semilla 2026) |
+| :--- | :--- |
+| Personal | `recepcion.norte@gymhub.dev`, `entrenadora.norte@gymhub.dev` y `entrenador.fuerza@gymhub.dev`, con la misma contraseña del administrador. |
+| Socios | ~500 con datos cifrados e índices ciegos, cuatro perfiles (fiel, regular, ocasional, desertor), ~10 % dados de baja. |
+| Membresías y pagos | ~940 encadenadas (renovaciones anticipadas y tardías), ~50 congelamientos, ~20 pagos cancelados con autorización. |
+| Asistencias | ~15 000 con horas pico (6-9, 12-14 y 17-21 h), menos visitas en fin de semana y más en enero. |
+| Salud y app | ~220 cuentas de app (contraseña `Socio#2026`), ~300 fichas de salud con restricciones, consentimientos y datos de Health Connect. |
+| Rutinas | 9 plantillas realistas, ~200 rutinas con versiones en Mongo y ~2 900 sesiones de entrenamiento con cargas progresivas. |
+| Retención | 7 segmentos, 10 campañas (8 enviadas, una programada y un borrador), ~740 notificaciones en estado final y riesgos de deserción actuales e históricos con acciones. |
+| Auditoría | ~4 500 registros de bitácora, ~2 000 interacciones y solicitudes ARCO. |
+
+* **Reproducible:** la misma `--semilla` genera los mismos datos; cambia el número para otra variación.
+* **Unicidad:** respeta los correos y teléfonos ya registrados. Puede correrse varias veces para acumular más socios.
+* **Notificaciones:** se crean como `entregado`, `enviado` o `fallido`, nunca `pendiente`, para que la cola no intente enviarlas a FCM.
+* **Limpieza:** cada corrida queda registrada en la colección `semilla_meta` de Mongo; `npm run semilla:masiva -- --limpiar` borra solo lo generado por el script (socios con todo su historial, usuarios, segmentos, campañas, plantillas y ejercicios).
+
+---
+
 ## Comandos Disponibles
 
 | Script | Descripción |
@@ -409,6 +442,7 @@ Contraseña: mínimo 10 caracteres con mayúscula, minúscula, número y símbol
 | `npm run token:dev` | Genera un JWT de personal para desarrollo (bloqueado en producción). |
 | `npm run usuario:password` | Asigna una contraseña segura (bcrypt) a un usuario y desbloquea la cuenta. |
 | `npm run respaldo` | Respalda SQL Server y MongoDB en `backups/` y borra los de más de 7 días. Con `-- --restaurar <carpeta> --si` restaura. |
+| `npm run semilla:masiva` | **Solo desarrollo.** Genera ~10 meses de operación simulada (500 socios por defecto). Opciones: `-- --socios=800`, `-- --semilla=7`, `-- --limpiar`. Ver [Datos masivos de prueba](#datos-masivos-de-prueba). |
 | `npm run claves:rotar` | Re-cifra los datos con la clave activa después de cambiar `ENCRYPTION_KEY` (requiere `npm run build`). |
 | `npm run test` / `test:cov` | Pruebas unitarias / cobertura. |
 | `npm run test:e2e` | Pruebas End-to-End. |

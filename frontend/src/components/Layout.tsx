@@ -82,7 +82,7 @@ export function Layout() {
             {usuario.rol}
             {usuario.admin_general ? ' · todas las sedes' : ''}
           </div>
-          <button className="btn btn-sm btn-texto" style={{ paddingLeft: 0, marginTop: 8 }} onClick={() => cerrarSesion()}>
+          <button className="btn btn-sm btn-texto pl-0 mt-2" onClick={() => cerrarSesion()}>
             <IconoSalir /> Cerrar sesión
           </button>
         </div>

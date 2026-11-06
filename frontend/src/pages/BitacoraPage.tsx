@@ -110,7 +110,7 @@ export function BitacoraPage() {
                       </tr>
                       {abierto === r.id && (
                         <tr>
-                          <td colSpan={6} style={{ background: 'var(--superficie-2)' }}>
+                          <td colSpan={6} className="bg-superficie-2">
                             <div className="rejilla rejilla-2">
                               <div>
                                 <div className="pequeno muted">Antes</div>

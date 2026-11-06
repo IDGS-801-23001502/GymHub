@@ -120,7 +120,7 @@ export function PagosPage() {
                         <th />
                       </tr>
                     </thead>
-                    <tbody style={{ opacity: cargando ? 0.6 : 1 }}>
+                    <tbody className={cargando ? 'opacity-60' : undefined}>
                       {datos.datos.map((p) => (
                         <tr key={p.id_pago}>
                           <td className="mono">{p.folio}</td>
@@ -137,7 +137,7 @@ export function PagosPage() {
                             {METODOS_PAGO[p.metodo]}
                             {p.referencia && <div className="muted pequeno">Ref. {p.referencia}</div>}
                           </td>
-                          <td className="num" style={p.estado === 'cancelado' ? { textDecoration: 'line-through', color: 'var(--texto-3)' } : undefined}>
+                          <td className={`num ${p.estado === 'cancelado' ? 'text-texto-3 line-through' : ''}`}>
                             {formatoMoneda(p.monto)}
                           </td>
                           <td>
@@ -151,7 +151,7 @@ export function PagosPage() {
                             )}
                           </td>
                           <td className="num">
-                            <div className="fila" style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                            <div className="fila justify-end flex-nowrap">
                               <button className="btn btn-sm" onClick={() => comprobante(p.id_pago)} aria-label={`Comprobante ${p.folio}`}>
                                 <IconoImprimir />
                               </button>
@@ -167,8 +167,8 @@ export function PagosPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="fila muted pequeno" style={{ padding: '10px 16px 0', justifyContent: 'flex-end' }}>
-                  Total registrado en esta página: <strong style={{ color: 'var(--texto)' }}>{formatoMoneda(totalPagina)}</strong>
+                <div className="fila muted pequeno pt-2.5 px-4 pb-0 justify-end">
+                  Total registrado en esta página: <strong className="text-texto">{formatoMoneda(totalPagina)}</strong>
                 </div>
                 <Paginacion pagina={pagina} porPagina={POR_PAGINA} total={datos.total} alCambiar={(n) => actualizar({ pagina: String(n) })} />
               </>

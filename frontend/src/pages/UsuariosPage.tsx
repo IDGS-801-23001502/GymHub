@@ -45,7 +45,7 @@ export function UsuariosPage() {
       <Alerta mensajes={errores} />
       <div className="tarjeta">
         <div className="tarjeta-titulo">
-          <input placeholder="Buscar por nombre o correo" value={filtro} onChange={(e) => setFiltro(e.target.value)} style={{ maxWidth: 320 }} aria-label="Buscar usuario" />
+          <input placeholder="Buscar por nombre o correo" value={filtro} onChange={(e) => setFiltro(e.target.value)} className="max-w-80" aria-label="Buscar usuario" />
           <span className="muted pequeno">{lista.length} usuarios</span>
         </div>
         {cargando && !datos ? (
@@ -70,7 +70,7 @@ export function UsuariosPage() {
                       <div className="persona">
                         <Avatar nombre={u.nombre} />
                         <div>
-                          <div style={{ fontWeight: 600 }}>
+                          <div className="font-semibold">
                             {u.nombre} {u.id_usuario === yo?.id_usuario && <span className="muted">(tú)</span>}
                           </div>
                           <div className="sub">{u.correo}</div>
@@ -94,7 +94,7 @@ export function UsuariosPage() {
                     </td>
                     <td className="pequeno">{formatoFechaHora(u.ultimo_acceso)}</td>
                     <td>
-                      <div className="fila" style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                      <div className="fila justify-end flex-nowrap">
                         {u.bloqueado && (
                           <button className="btn btn-sm" onClick={() => void accion(() => adminApi.desbloquear(u.id_usuario))}>
                             Desbloquear

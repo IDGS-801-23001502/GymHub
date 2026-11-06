@@ -34,13 +34,13 @@ function Envios({ e }: { e: Campana['envios'] }) {
   const total = e.pendiente + e.enviado + e.entregado + e.fallido;
   if (!total) return <span className="muted pequeno">—</span>;
   return (
-    <div className="pequeno" style={{ minWidth: 160 }}>
-      <div className="barra" style={{ display: 'flex' }} aria-hidden="true">
+    <div className="pequeno min-w-40">
+      <div className="barra flex" aria-hidden="true">
         <span style={{ width: `${((e.entregado + e.enviado) / total) * 100}%` }} />
       </div>
-      <div className="muted" style={{ marginTop: 4 }}>
+      <div className="muted mt-1">
         {e.entregado} entregados · {e.enviado} enviados · {e.pendiente} pendientes
-        {e.fallido > 0 && <span style={{ color: 'var(--error)' }}> · {e.fallido} fallidos</span>}
+        {e.fallido > 0 && <span className="text-error"> · {e.fallido} fallidos</span>}
       </div>
     </div>
   );
@@ -93,7 +93,7 @@ export function CampanasPage() {
                 {datos.map((c) => (
                   <tr key={c.id_campana} className="clic" onClick={() => setDetalle(c.id_campana)}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{c.titulo}</div>
+                      <div className="font-semibold">{c.titulo}</div>
                       <div className="pequeno muted">{CATEGORIAS[c.categoria]}</div>
                     </td>
                     <td>
@@ -159,8 +159,8 @@ function DetalleCampana({ id, alCerrar, alCambiar }: { id: number; alCerrar: () 
               {c.programada_para && ` · programada para ${formatoFechaHora(c.programada_para)}`}
             </span>
           </div>
-          <div className="tarjeta tarjeta-cuerpo" style={{ background: 'var(--superficie-2)' }}>
-            <div style={{ fontWeight: 700 }}>{c.titulo}</div>
+          <div className="tarjeta tarjeta-cuerpo bg-superficie-2">
+            <div className="font-bold">{c.titulo}</div>
             <p className="muted">{c.contenido}</p>
           </div>
           <div className="fila">
@@ -182,7 +182,7 @@ function DetalleCampana({ id, alCerrar, alCambiar }: { id: number; alCerrar: () 
           </div>
           <Envios e={c.envios} />
           {c.notificaciones.length > 0 && (
-            <div className="tabla-envoltura" style={{ maxHeight: 320 }}>
+            <div className="tabla-envoltura max-h-80">
               <table>
                 <thead>
                   <tr>
@@ -323,22 +323,22 @@ function NuevaCampana({ alCerrar, alGuardar }: { alCerrar: () => void; alGuardar
               )}
             </Campo>
           ) : socio ? (
-            <div className="resultado-socio" style={{ cursor: 'default' }}>
+            <div className="resultado-socio cursor-default">
               <div>
-                <div style={{ fontWeight: 600 }}>{socio.nombre}</div>
+                <div className="font-semibold">{socio.nombre}</div>
                 <div className="pequeno muted">{socio.folio}</div>
               </div>
-              <button className="btn btn-sm btn-texto" style={{ marginLeft: 'auto' }} onClick={() => setSocio(null)}>
+              <button className="btn btn-sm btn-texto ml-auto" onClick={() => setSocio(null)}>
                 Cambiar
               </button>
             </div>
           ) : (
-            <div className="espaciado" style={{ gap: 6 }}>
+            <div className="espaciado gap-1.5">
               <Campo etiqueta="Buscar socio">{(p) => <input {...p} placeholder="Nombre, teléfono o folio" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />}</Campo>
               {resultados.map((s) => (
                 <button key={s.id_socio} className="resultado-socio" onClick={() => setSocio(s)}>
                   <div>
-                    <div style={{ fontWeight: 600 }}>{s.nombre}</div>
+                    <div className="font-semibold">{s.nombre}</div>
                     <div className="pequeno muted">
                       {s.folio} · {s.sede}
                     </div>
@@ -363,9 +363,9 @@ function NuevaCampana({ alCerrar, alGuardar }: { alCerrar: () => void; alGuardar
               {(p) => <input {...p} type="datetime-local" value={d.programada_para ?? ''} onChange={(e) => setD({ ...d, programada_para: e.target.value })} />}
             </Campo>
           )}
-          <div className="tarjeta tarjeta-cuerpo" style={{ background: 'var(--superficie-2)' }}>
+          <div className="tarjeta tarjeta-cuerpo bg-superficie-2">
             <div className="pequeno muted">Vista previa en el teléfono</div>
-            <div style={{ fontWeight: 700, marginTop: 6 }}>{d.titulo || 'Título de la notificación'}</div>
+            <div className="font-bold mt-1.5">{d.titulo || 'Título de la notificación'}</div>
             <div className="muted pequeno">{d.contenido || 'Mensaje…'}</div>
           </div>
         </div>

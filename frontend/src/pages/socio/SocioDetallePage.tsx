@@ -72,12 +72,12 @@ export function SocioDetallePage() {
 
   return (
     <>
-      <div className="pequeno" style={{ marginBottom: 12 }}>
+      <div className="pequeno mb-3">
         <Link to="/socios">← Socios</Link>
       </div>
 
-      <div className="tarjeta tarjeta-cuerpo" style={{ marginBottom: 20 }}>
-        <div className="resumen-mem" style={{ justifyContent: 'space-between' }}>
+      <div className="tarjeta tarjeta-cuerpo mb-5">
+        <div className="resumen-mem justify-between">
           <div className="persona">
             <div className="foto-editable">
               <Avatar nombre={socio.nombre} foto={urlArchivo(socio.foto_url)} grande />
@@ -99,7 +99,7 @@ export function SocioDetallePage() {
             </div>
             <div>
               <h1>{socio.nombre}</h1>
-              <div className="fila muted pequeno" style={{ marginTop: 4 }}>
+              <div className="fila muted pequeno mt-1">
                 <span className="mono">{socio.folio}</span>
                 <span>·</span>
                 <span>{socio.edad} años</span>
@@ -111,14 +111,14 @@ export function SocioDetallePage() {
           <div className="resumen-mem">
             <div>
               <div className="muted pequeno">Membresía</div>
-              <div className="fila" style={{ marginTop: 4 }}>
+              <div className="fila mt-1">
                 <EstadoMembresiaBadge estado={m?.estado} />
                 {m && <strong>{m.plan.nombre}</strong>}
               </div>
               {m && <div className="muted pequeno">Vigente hasta {formatoFecha(m.vigente_hasta)}</div>}
             </div>
             {m && m.estado !== 'vencida' && (
-              <div style={{ textAlign: 'center' }}>
+              <div className="text-center">
                 <div className="dias-grande">{m.dias_restantes}</div>
                 <div className="muted pequeno">días restantes</div>
               </div>
@@ -126,12 +126,12 @@ export function SocioDetallePage() {
           </div>
         </div>
         {errorFoto.length > 0 && (
-          <div style={{ marginTop: 12 }}>
+          <div className="mt-3">
             <Alerta mensajes={errorFoto} />
           </div>
         )}
         {socio.estado === 'baja' && (
-          <div style={{ marginTop: 16 }}>
+          <div className="mt-4">
             <Alerta tipo="aviso">
               Dado de baja el {formatoFecha(socio.fecha_baja)}
               {socio.motivo_baja ? `: ${socio.motivo_baja}` : ''}.

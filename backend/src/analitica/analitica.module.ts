@@ -5,7 +5,7 @@ import { sesionesPlaneadas } from '../app-socio/app-socio.service.js';
 import type { ContextoPeticion, UsuarioAutenticado } from '../common/auth/auth.types.js';
 import { Ctx, Roles } from '../common/auth/decorators.js';
 import { exigirSede, filtroSedes } from '../common/auth/sedes.js';
-import { aFecha, aISO, diferenciaDias, hoyISO, sumarDias } from '../common/utils/fechas.js';
+import { aFecha, aISO, diferenciaDias, formateador, hoyISO, sumarDias } from '../common/utils/fechas.js';
 import { aNumero } from '../common/utils/serializar.js';
 import { MembresiasModule } from '../membresias/membresias.module.js';
 import { MembresiasService, seleccionResumen } from '../membresias/membresias.service.js';
@@ -33,7 +33,7 @@ const zona = () => process.env.APP_TIMEZONE ?? 'America/Mexico_City';
 
 /** Día de la semana (1 = lunes) y hora en la zona del gimnasio. */
 export function diaYHora(fecha: Date, tz = zona()): { dia: number; hora: number } {
-  const partes = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', hour: 'numeric', hourCycle: 'h23' }).formatToParts(fecha);
+  const partes = formateador('en-US', { timeZone: tz, weekday: 'short', hour: 'numeric', hourCycle: 'h23' }).formatToParts(fecha);
   const dias: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
   return {
     dia: dias[partes.find((p) => p.type === 'weekday')!.value],
@@ -43,7 +43,7 @@ export function diaYHora(fecha: Date, tz = zona()): { dia: number; hora: number 
 
 /** Fecha local (YYYY-MM-DD) de un instante. */
 export function diaLocal(fecha: Date, tz = zona()): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(fecha);
+  return formateador('en-CA', { timeZone: tz }).format(fecha);
 }
 
 /** Meses YYYY-MM entre dos fechas, inclusive. */

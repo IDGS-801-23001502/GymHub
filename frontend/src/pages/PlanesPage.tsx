@@ -72,8 +72,8 @@ export function PlanesPage() {
         ) : (
           <div className="rejilla rejilla-3">
             {datos?.map((p) => (
-              <article key={p.id_plan} className="tarjeta tarjeta-cuerpo espaciado" style={{ opacity: p.activo ? 1 : 0.65 }}>
-                <div className="fila" style={{ justifyContent: 'space-between' }}>
+              <article key={p.id_plan} className={`tarjeta tarjeta-cuerpo espaciado ${p.activo ? '' : 'opacity-65'}`}>
+                <div className="fila justify-between">
                   <h2>{p.nombre}</h2>
                   {p.activo ? <span className="badge badge-ok">Activo</span> : <span className="badge badge-neutro">Inactivo</span>}
                 </div>
@@ -83,9 +83,9 @@ export function PlanesPage() {
                     {TIPOS[p.tipo].texto} · {p.duracion_dias} días
                   </div>
                 </div>
-                {p.beneficios && <p className="pequeno" style={{ whiteSpace: 'pre-line' }}>{p.beneficios}</p>}
+                {p.beneficios && <p className="pequeno whitespace-pre-line">{p.beneficios}</p>}
                 {admin && (
-                  <div className="fila" style={{ marginTop: 'auto' }}>
+                  <div className="fila mt-auto">
                     <button className="btn btn-sm" onClick={() => setEditando(p)}>Editar</button>
                     <button className={`btn btn-sm${p.activo ? ' btn-peligro' : ''}`} onClick={() => alternar(p)}>
                       {p.activo ? 'Desactivar' : 'Activar'}

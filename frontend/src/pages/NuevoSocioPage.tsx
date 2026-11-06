@@ -100,7 +100,7 @@ export function NuevoSocioPage() {
 
   if (creado) {
     return (
-      <div className="tarjeta tarjeta-cuerpo espaciado" style={{ maxWidth: 620 }}>
+      <div className="tarjeta tarjeta-cuerpo espaciado max-w-155">
         <Alerta tipo="ok">Socio registrado correctamente.</Alerta>
         <div>
           <h1>{creado.nombre}</h1>
@@ -152,7 +152,7 @@ export function NuevoSocioPage() {
         ))}
       </ol>
 
-      <form className="tarjeta tarjeta-cuerpo espaciado" onSubmit={siguiente} noValidate style={{ maxWidth: 760 }}>
+      <form className="tarjeta tarjeta-cuerpo espaciado max-w-190" onSubmit={siguiente} noValidate>
         <Alerta mensajes={erroresApi} />
 
         {paso === 0 && (
@@ -262,7 +262,7 @@ export function NuevoSocioPage() {
           </dl>
         )}
 
-        <div className="fila" style={{ justifyContent: 'space-between' }}>
+        <div className="fila justify-between">
           <button type="button" className="btn" disabled={paso === 0 || enviando} onClick={() => setPaso(paso - 1)}>
             Atrás
           </button>

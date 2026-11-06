@@ -62,7 +62,7 @@ export function PlantillasPage() {
             {Object.entries(NIVELES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
-        <label className="casilla" style={{ alignSelf: 'center' }}>
+        <label className="casilla self-center">
           <input type="checkbox" checked={inactivas} onChange={(e) => setInactivas(e.target.checked)} />
           Mostrar desactivadas
         </label>
@@ -79,8 +79,8 @@ export function PlantillasPage() {
         ) : (
           <div className="rejilla rejilla-3">
             {datos?.map((p) => (
-              <article key={p.id} className="tarjeta tarjeta-cuerpo espaciado" style={{ opacity: p.activa ? 1 : 0.65 }}>
-                <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <article key={p.id} className={`tarjeta tarjeta-cuerpo espaciado ${p.activa ? '' : 'opacity-65'}`}>
+                <div className="fila justify-between items-start">
                   <h2>{p.nombre}</h2>
                   {!p.activa && <span className="badge badge-neutro">Desactivada</span>}
                 </div>
@@ -92,7 +92,7 @@ export function PlantillasPage() {
                 <p className="muted pequeno">
                   {p.bloques.map((b) => TIPOS_BLOQUE[b.tipo] ?? b.tipo).join(' · ')} — {p.total_ejercicios} ejercicios
                 </p>
-                <div className="fila" style={{ marginTop: 'auto' }}>
+                <div className="fila mt-auto">
                   <Link className="btn btn-sm" to={`/plantillas/${p.id}`}>Editar</Link>
                   <button className="btn btn-sm" onClick={() => setDuplicando(p)}>Duplicar</button>
                   <button className={`btn btn-sm${p.activa ? ' btn-peligro' : ''}`} onClick={() => alternar(p)}>

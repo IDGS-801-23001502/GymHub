@@ -14,6 +14,7 @@
 - [Instalación y Ejecución](#instalación-y-ejecución)
 - [Comandos Disponibles](#comandos-disponibles)
 - [Estructura del Proyecto](#estructura-del-proyecto)
+- [Estilos (Tailwind CSS)](#estilos-tailwind-css)
 - [Integración con el Backend](#integración-con-el-backend)
 
 ---
@@ -68,6 +69,7 @@ El frontend de **GymHub** provee la interfaz gráfica web responsiva (optimizada
 | **Vite** | `^8.3.0` | Servidor de desarrollo con HMR ultra rápido y bundler de producción |
 | **TypeScript** | `~6.0.2` | Tipado estático y robustez en tiempo de compilación |
 | **React Compiler** | `babel-plugin-react-compiler` | Optimización reactiva automática de componentes |
+| **Tailwind CSS** | `^4.3.4` (`@tailwindcss/vite`) | Estilos con utilidades; tokens del tema y componentes del CRM en `src/index.css` |
 | **ESLint** | Flat Config (`v10.x`) | Reglas de calidad y verificación estática de código |
 
 ---
@@ -76,7 +78,7 @@ El frontend de **GymHub** provee la interfaz gráfica web responsiva (optimizada
 
 * **Node.js**: Versión LTS (`>= 20.x`, compatible con `22.x` y `24.x`).
 * **npm**: `v10.x` o superior.
-* Servidor Backend (NestJS) ejecutándose en `http://localhost:3000`.
+* Servidor Backend (NestJS) ejecutándose: en desarrollo se usa el del equipo por ZeroTier, en `http://10.118.55.94:3000` (ver [Red de desarrollo](../README.md#red-de-desarrollo-zerotier)), o `http://localhost:3000` si lo corres en tu equipo.
 
 ---
 
@@ -91,8 +93,8 @@ cp .env.example .env
 Contenido de `.env`:
 
 ```env
-# URL base de la API Backend NestJS
-VITE_API_URL="http://localhost:3000"
+# URL base de la API Backend NestJS (ZeroTier; usa http://localhost:3000 si el backend corre en tu equipo)
+VITE_API_URL="http://10.118.55.94:3000"
 # Minutos sin actividad antes de cerrar la sesión (CRM-RNF-03)
 VITE_MINUTOS_INACTIVIDAD=30
 # Debe coincidir con CONGELAMIENTO_MAX_DIAS del backend
@@ -112,7 +114,7 @@ VITE_CONGELAMIENTO_MAX_DIAS=90
    ```bash
    npm run dev
    ```
-   La aplicación estará accesible en `http://localhost:5173`.
+   La aplicación estará accesible en `http://localhost:5173`. Como `vite.config.ts` tiene `server.host: true`, también se abre desde la red de ZeroTier (`http://10.118.55.94:5173`). Ese origen debe estar en `CORS_ORIGIN` del backend.
 
 3. **Compilar para producción:**
    ```bash
@@ -163,10 +165,39 @@ frontend/
     ├── components/       # Layout con sidebar, modales, campos, insignias, íconos y editor/vista de bloques de rutina
     ├── pages/            # Login, Socios, NuevoSocio, Pagos, Planes, Ejercicios, Plantillas y socio/ (expediente y pestañas)
     ├── utils/            # Formato de fechas/moneda, useCarga, comprobantes y validación de bloques
-    ├── index.css         # Estilos globales con la estética de la app móvil (oscuro, morado #8A2BE2, responsivo desde 768 px)
+    ├── index.css         # Tailwind CSS v4: tema (@theme), estilos base y componentes del CRM (@apply)
     ├── App.tsx           # Rutas protegidas (React Router 7)
     └── main.tsx          # Punto de entrada de React en el DOM
 ```
+
+---
+
+## Estilos (Tailwind CSS)
+
+El CRM usa **Tailwind CSS v4** con el plugin de Vite (`@tailwindcss/vite`); no hay `tailwind.config.js`, toda la configuración vive en [`src/index.css`](./src/index.css). La estética es la de la app móvil: tema oscuro, morado `#8A2BE2` y responsivo desde 768 px.
+
+* **Tokens del tema (`@theme`):** cada token genera sus utilidades.
+
+  | Token | Utilidades | Uso |
+  | :--- | :--- | :--- |
+  | `--color-fondo`, `--color-superficie`, `-2`, `-3` | `bg-fondo`, `bg-superficie-2`… | Fondo y capas de tarjetas |
+  | `--color-borde` | `border-borde` | Bordes |
+  | `--color-texto`, `-2`, `-3` | `text-texto`, `text-texto-2`… | Texto principal, secundario y tenue |
+  | `--color-marca`, `-texto`, `-suave` | `bg-marca`, `text-marca-texto`, `bg-marca-suave` | Morado de marca |
+  | `--color-ok`, `aviso`, `error`, `info` (+ `-fondo`) | `text-ok`, `bg-error-fondo`… | Estados |
+  | `--radius-tarjeta` (20px), `-caja` (14px), `-control` (12px) | `rounded-tarjeta`… | Radios |
+  | `--shadow-tarjeta`, `-resplandor`, `-modal` | `shadow-resplandor`… | Sombras |
+  | `@utility bg-degradado` | `bg-degradado` | Degradado #9C27B0 → #673AB7 |
+
+* **Escala de espaciado:** la raíz mide 15px, pero `--spacing` está fijado en `4px`, así que `p-4` = 16px y `gap-2.5` = 10px, como en cualquier proyecto de Tailwind.
+* **Componentes (`@layer components`):** las clases que se repiten en todo el CRM (`btn`, `btn-primario`, `tarjeta`, `campo`, `badge-ok`, `modal`, `pestana`, `kpi`…) están hechas con `@apply`. Úsalas para mantener la consistencia y ajusta con utilidades en el JSX: las utilidades siempre ganan sobre estas clases.
+  ```tsx
+  <div className="fila justify-between mt-3">
+    <button className="btn btn-primario w-auto">Guardar</button>
+  </div>
+  ```
+* **Sin `style={{}}` fijos:** usa utilidades. Los estilos inline solo quedan donde el valor se calcula en tiempo de ejecución (alturas de gráficas, porcentajes de barras, colores del mapa de calor).
+* **Responsivo:** los puntos de quiebre del diseño son `max-[900px]:` (menú lateral → barra superior), `max-[760px]:` (rejillas a una columna) y `max-[1000px]:`.
 
 ---
 
